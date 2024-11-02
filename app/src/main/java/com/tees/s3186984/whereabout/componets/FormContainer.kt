@@ -21,16 +21,16 @@ import androidx.compose.ui.unit.dp
  *      The content can be any composables that represent form fields or other UI elements.
  */
 @Composable
-fun FormContainer(modifier: Modifier = Modifier, content: ColumnScope.() -> Unit){
+fun FormContainer(modifier: Modifier = Modifier, content:  @Composable (ColumnScope.() -> Unit)){
     Column(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .background(color = Color.White, shape = RoundedCornerShape(15.dp))
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.Start) {
-
+        verticalArrangement = Arrangement.spacedBy(15.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
         content()
     }
 }
