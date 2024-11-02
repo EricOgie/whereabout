@@ -3,9 +3,12 @@ package com.tees.s3186984.whereabout.navigation
 enum class Screens {
     Home,
     SignUp,
+    SubmitSignUp,
     LogIn,
     PasswordResetRequest,
     PasswordReset,
+    Splash,
+    Onboarding,
     Profile;
 
 

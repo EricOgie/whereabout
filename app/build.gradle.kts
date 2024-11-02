@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
 }
 
 android {
     namespace = "com.tees.s3186984.whereabout"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.tees.s3186984.whereabout"
@@ -57,6 +58,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.navigation.compose)
+    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.lottie)
+    implementation(libs.datastore.preferences)
+
 
     // Use Firebase BoM to manage Firebase SDK versions
     implementation(platform(libs.firebase.bom))
@@ -66,3 +71,4 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
 }
+

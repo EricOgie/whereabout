@@ -7,12 +7,14 @@ import com.tees.s3186984.whereabout.navigation.App
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 
 
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WhereaboutTheme{
-                App()
+                App(this)
             }
         }
     }
