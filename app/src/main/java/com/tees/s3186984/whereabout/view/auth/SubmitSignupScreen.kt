@@ -14,8 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-//import androidx.navigation.NavController
-//import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.BackButton
 import com.tees.s3186984.whereabout.componets.FormContainer
 import com.tees.s3186984.whereabout.componets.WTextField
@@ -25,29 +23,22 @@ import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 import androidx.compose.runtime.remember
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.SubmitButton
-import com.tees.s3186984.whereabout.wutils.AGREE
-import com.tees.s3186984.whereabout.wutils.AGREE_MESSAGE
-import com.tees.s3186984.whereabout.wutils.EMAIL
-import com.tees.s3186984.whereabout.wutils.NAME
-import com.tees.s3186984.whereabout.wutils.PASSWORD
-import com.tees.s3186984.whereabout.wutils.REGISTER
-import com.tees.s3186984.whereabout.wutils.SIGNUP_GREETING
+import com.tees.s3186984.whereabout.navigation.Screens
+import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
 
+import com.tees.s3186984.whereabout.wutils.ANSWER
+import com.tees.s3186984.whereabout.wutils.PASSWORD_RECOVERY_INFO
+import com.tees.s3186984.whereabout.wutils.REGISTER
+import com.tees.s3186984.whereabout.wutils.SECURITY_QUESTION
+import com.tees.s3186984.whereabout.wutils.SIGNUP_NUDGE
 
 
 @Composable
-fun SignUpScreen(){
-
-    var fullNameState = remember { mutableStateOf("") }
-    var emailState =  remember { mutableStateOf("") }
-    var pState = remember { mutableStateOf("") }
-
+fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel){
 
     Surface(modifier = Modifier.fillMaxSize(), color = WLightGray){
         Column(
@@ -55,9 +46,7 @@ fun SignUpScreen(){
                 .padding(horizontal = 15.dp, vertical = 15.dp)
                 .fillMaxSize()
         ) {
-            BackButton {
-                /* TODO - navigate */
-            }
+            BackButton { navController.navigate(Screens.SignUp.name) }
 
             Spacer(modifier = Modifier.height(70.dp))
 
@@ -73,41 +62,36 @@ fun SignUpScreen(){
 
             FormContainer {
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(text = SIGNUP_GREETING)
+                Text(text = SIGNUP_NUDGE)
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // FullName field
+            // ---------- Password Recovery Question TextField ------------- //
                 WTextField(
-                    state =  fullNameState,
-                    label = NAME,
-                    leadingIcon = Icons.Rounded.Person,
+                    state =  signUpVM.questionState,
+                    label = SECURITY_QUESTION,
+                    maxLine = 3,
+                    leadingIcon = null,
                     keyboardType = KeyboardType.Text
 
-                ) { finalValue -> fullNameState.value  = finalValue}
+                ) { finalValue -> signUpVM.questionState.value  = finalValue}
 
+            // ---------- Password Recovery Question TextField ------------- //
                 WTextField(
-                    state = emailState,
-                    label = EMAIL,
-                    leadingIcon = Icons.Rounded.Email,
+                    state = signUpVM.answerState,
+                    label = ANSWER,
+                    maxLine = 3,
+                    leadingIcon = null,
                     keyboardType = KeyboardType.Email
-                ) {finalValue ->  emailState.value= finalValue}
+                ) {finalValue ->  signUpVM.answerState.value = finalValue }
 
-                WTextField(
-                    state = pState,
-                    label = PASSWORD,
-                    leadingIcon = Icons.Rounded.Lock,
-                    keyboardType = KeyboardType.Password
-                ) { finalValue -> pState.value = finalValue }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(text = AGREE_MESSAGE,
-                    fontSize = 13.sp,
-                )
+                Text(text = PASSWORD_RECOVERY_INFO, fontSize = 13.sp)
 
-                SubmitButton(text = AGREE) {
-                    /* --- TODO --- */
+                SubmitButton(text = REGISTER) {
+                    if(signUpVM.isValidFormData()){
+                        signUpVM.signUp()
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -116,11 +100,15 @@ fun SignUpScreen(){
     }
 }
 
+
+
 @Preview
 @Composable
-fun SignUpPreview() {
+fun SubmitSignUpScreenPreview() {
     WhereaboutTheme {
-
-        SignUpScreen()
+        SubmitSignUpScreen(
+            rememberNavController(),
+            SignUpViewModel()
+        )
     }
 }

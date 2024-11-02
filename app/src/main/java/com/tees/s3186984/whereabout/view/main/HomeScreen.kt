@@ -15,7 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 
 @Composable
-fun HomeScreen(controller: NavController) {
+fun HomeScreen(navController: NavController) {
     Surface(color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -32,6 +32,6 @@ fun HomeScreen(controller: NavController) {
 @Composable
 fun HomePreview() {
     WhereaboutTheme {
-        HomeScreen(controller= rememberNavController())
+        HomeScreen(navController = rememberNavController())
     }
 }
