@@ -1,5 +1,6 @@
 package com.tees.s3186984.whereabout.view.auth
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,10 +23,10 @@ import com.tees.s3186984.whereabout.componets.WTextField
 import com.tees.s3186984.whereabout.ui.theme.WBlack
 import com.tees.s3186984.whereabout.ui.theme.WLightGray
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
-import androidx.compose.runtime.remember
-
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.Observer
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.SubmitButton
@@ -32,6 +35,7 @@ import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
 
 import com.tees.s3186984.whereabout.wutils.ANSWER
 import com.tees.s3186984.whereabout.wutils.PASSWORD_RECOVERY_INFO
+import com.tees.s3186984.whereabout.wutils.PHRASE_ERROR_MSG
 import com.tees.s3186984.whereabout.wutils.REGISTER
 import com.tees.s3186984.whereabout.wutils.SECURITY_QUESTION
 import com.tees.s3186984.whereabout.wutils.SIGNUP_NUDGE
@@ -61,8 +65,21 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
             Spacer(modifier = Modifier.height(30.dp))
 
             FormContainer {
+            // ---------- Display Error Alert if signup request error ------------- //
+                if (signUpVM.displaySignUpRequestError.value){
+                    val message by signUpVM.sinUpRequestMessage
+                    Text(text = message, color = Color.Red, fontSize = 14.sp)
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(text = SIGNUP_NUDGE)
+
+            // ---------- Display Error Alert if form validation error ------------- //
+                if (signUpVM.displayScreen2ErrorState.value){
+                    Text(text = PHRASE_ERROR_MSG, color = Color.Red, fontSize = 13.sp)
+                }else{
+                    Text(text = SIGNUP_NUDGE)
+                }
+
 
             // ---------- Password Recovery Question TextField ------------- //
                 WTextField(
@@ -74,7 +91,7 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
 
                 ) { finalValue -> signUpVM.questionState.value  = finalValue}
 
-            // ---------- Password Recovery Question TextField ------------- //
+            // ---------- Password Recovery Answer TextField ------------- //
                 WTextField(
                     state = signUpVM.answerState,
                     label = ANSWER,
@@ -88,7 +105,7 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
 
                 Text(text = PASSWORD_RECOVERY_INFO, fontSize = 13.sp)
 
-                SubmitButton(text = REGISTER) {
+                SubmitButton(text = REGISTER, loadingState = signUpVM.loadingState) {
                     if(signUpVM.isValidFormData()){
                         signUpVM.signUp()
                     }
@@ -98,8 +115,26 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
             }
         }
     }
-}
 
+// ------------------------   Observe result state --------------------------//
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(Unit) {
+        signUpVM.result.observe(lifecycleOwner, Observer { result ->
+            result?.let { (success, _) ->
+                if (success) {
+                    navController.navigate(Screens.Home.name) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }else {
+                    signUpVM.displaySignUpRequestError.value = true
+                }
+            }
+        })
+    }
+}
 
 
 @Preview

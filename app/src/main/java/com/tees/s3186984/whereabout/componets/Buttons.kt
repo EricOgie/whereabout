@@ -2,8 +2,6 @@ package com.tees.s3186984.whereabout.componets
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -17,14 +15,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.tees.s3186984.whereabout.R
 
 /**
  * A composable function that displays a back button.
@@ -67,7 +72,17 @@ fun BackButton(handleClick: () -> Unit) {
  * @param handleClick A lambda function that is executed when the button is clicked.
  */
 @Composable
-fun SubmitButton(modifier: Modifier = Modifier, text: String, handleClick: () -> Unit ) {
+fun SubmitButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    loadingState: MutableState<Boolean> = mutableStateOf(false),
+    handleClick: () -> Unit )
+{
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loaderbar)
+    )
+
+
     Button(
         onClick = handleClick,
         modifier = modifier
@@ -75,28 +90,23 @@ fun SubmitButton(modifier: Modifier = Modifier, text: String, handleClick: () ->
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
     ) {
-        Text(
-            text = text,
-            fontSize = 18.sp,
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium
-        )
-    }
-}
-
-
-
-
-
-@Preview
-@Composable
-fun BackButtonPreview() {
-    MaterialTheme {
-        Column(modifier = Modifier.padding(15.dp)) {
-            BackButton(handleClick = { /* Do something on click */ })
-            Spacer(modifier = Modifier.height(30.dp))
-            SubmitButton(text = "Agree and Continue"){}
+        if (loadingState.value){
+            LottieAnimation(
+                modifier = Modifier.scale(2f),
+                composition = composition,
+                iterations = LottieConstants.IterateForever
+            )
+        }else{
+            Text(
+                text = text,
+                fontSize = 18.sp,
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium
+            )
         }
 
     }
 }
+
+
+

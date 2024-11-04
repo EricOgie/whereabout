@@ -18,11 +18,15 @@ import android.os.CountDownTimer
 class LaunchViewModel(context: Context) : ViewModel() {
 
     private var isCountdownCompleted = false
+
+    // Repository for accessing datastore ( a replacement for shared preferences )
     private val preferenceRepo = PreferencesRepository(context = context)
 
+    // Destination to navigate to after the countdown and checks
     lateinit var navigationDestination: String
         private set
 
+    // StateFlow to notify when the ViewModel is ready to navigate
     val isReadyToNavigate = MutableStateFlow(false)
 
 
@@ -33,11 +37,23 @@ class LaunchViewModel(context: Context) : ViewModel() {
     }
 
 
+    /**
+     * Saves the onboarding completion status in preferences.
+     * This indicates that the user has completed the onboarding process.
+     */
     suspend fun saveIsOnboarded() {
         preferenceRepo.saveBooleanPreference(ONBOARDING_COMPLETE_KEY, true)
     }
 
 
+    /**
+     * Determines the navigation destination based on the onboarding
+     * status and the authentication token.
+     *
+     * This function sets the `navigationDestination` to the appropriate
+     * screen based on whether the onboarding is complete and whether
+     * the user is authenticated.
+     */
     private suspend fun getNavigationDestination() {
 
         try {
@@ -49,13 +65,11 @@ class LaunchViewModel(context: Context) : ViewModel() {
                 authToken.isNullOrEmpty() -> Screens.LogIn.name
                 else -> Screens.Home.name
             }
-            d("LaunchViewModel", "DESTINATION: $navigationDestination")
-            isReadyToNavigate.value = true
+
         }catch (e: Exception){
-            d("LaunchViewModel", "getNavigationDestination Exception: ${e.message}")
             /** TODO for ERIC : navigationDestination should be set to error screen HERE*/
             navigationDestination = Screens.SubmitSignUp.name // temp
-            isReadyToNavigate.value = true
+
         } finally {
             isReadyToNavigate.value = true
             d("FINAL", "IS READY: ${isReadyToNavigate.value}")
@@ -64,6 +78,11 @@ class LaunchViewModel(context: Context) : ViewModel() {
     }
 
 
+    /**
+     * Starts a countdown timer that lasts for 4000 milliseconds (4 seconds).
+     * When the countdown finishes, it triggers the retrieval of the
+     * navigation destination.
+     */
     fun startCountdown() {
         if (isCountdownCompleted) return
         val timer = object : CountDownTimer(4000, 1000) {

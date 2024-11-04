@@ -1,5 +1,6 @@
 package com.tees.s3186984.whereabout.view.auth
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +25,8 @@ import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,24 +35,20 @@ import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.ScreenAddOn
 import com.tees.s3186984.whereabout.componets.SubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
-import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
-import com.tees.s3186984.whereabout.wutils.AGREE
-import com.tees.s3186984.whereabout.wutils.AGREE_MESSAGE
-import com.tees.s3186984.whereabout.wutils.ALREADY_HAVE
+import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
+import com.tees.s3186984.whereabout.wutils.DONT_HAVE
+
 import com.tees.s3186984.whereabout.wutils.EMAIL
 import com.tees.s3186984.whereabout.wutils.EMAIL_ERROR_MSG
+import com.tees.s3186984.whereabout.wutils.FORGET_PASS
 import com.tees.s3186984.whereabout.wutils.LOGIN
-import com.tees.s3186984.whereabout.wutils.NAME
-import com.tees.s3186984.whereabout.wutils.NAME_ERROR_MSG
 import com.tees.s3186984.whereabout.wutils.PASSWORD
 import com.tees.s3186984.whereabout.wutils.PASSWORD_ERROR_MSG
 import com.tees.s3186984.whereabout.wutils.REGISTER
-import com.tees.s3186984.whereabout.wutils.SIGNUP_GREETING
-
 
 
 @Composable
-fun SignUpScreen(navController: NavController, signUpVM : SignUpViewModel){
+fun LogInScreen(navController: NavController, logInVM: LogInViewModel){
 
     Surface(modifier = Modifier.fillMaxSize(), color = WLightGray){
         Column(
@@ -61,85 +59,112 @@ fun SignUpScreen(navController: NavController, signUpVM : SignUpViewModel){
 
             Spacer(modifier = Modifier.height(80.dp))
 
+        // ---------- Form Title ------------ //
             Text(
-                text = REGISTER,
+                text = LOGIN,
                 color = WBlack,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
+        // ---------- Form Container ------------ //
             FormContainer {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                if (signUpVM.displayScreen1ErrorState.value){
-                    ErrorAlert()
-                }else {
-                    Text(text = SIGNUP_GREETING)
-                    Spacer(modifier = Modifier.height(10.dp))
+             //------- Display LogIn Request Error if any-------//
+                if (logInVM.displayLogInRequestError.value){
+                    val message by logInVM.logInRequestMessage
+                    Text(text = message, color = Color.Red, fontSize = 14.sp)
                 }
 
-            //---------- FullName TextField -----------------//
-                WTextField(
-                    state =  signUpVM.fullNameState,
-                    label = NAME,
-                    leadingIcon = Icons.Rounded.Person,
-                    keyboardType = KeyboardType.Text
+                Spacer(modifier = Modifier.height(10.dp))
 
-                ) { finalValue -> signUpVM.fullNameState.value  = finalValue}
+            //------- Display Form Data Error if any-------//
+                if (logInVM.displayFormError.value){
+                    FormDataErrorAlert()
+                }
 
-            // ---------- Email TextField ------------ //
+                // ---------- Email TextField ------------ //
                 WTextField(
-                    state = signUpVM.emailState,
+                    state = logInVM.emailState,
                     label = EMAIL,
                     leadingIcon = Icons.Rounded.Email,
                     keyboardType = KeyboardType.Email
-                ) {finalValue ->  signUpVM.emailState.value= finalValue}
+                ) {finalValue ->  logInVM.emailState.value= finalValue}
 
-            // ----------Password TextField ------------ //
+                // ----------Password TextField ------------ //
                 WTextField(
-                    state = signUpVM.passwordState,
+                    state = logInVM.passwordState,
                     label = PASSWORD,
                     leadingIcon = Icons.Rounded.Lock,
                     keyboardType = KeyboardType.Password
-                ) { finalValue -> signUpVM.passwordState.value = finalValue }
+                ) { finalValue -> logInVM.passwordState.value = finalValue }
 
-                Spacer(modifier = Modifier.height(10.dp))
 
-                Text(text = AGREE_MESSAGE, fontSize = 13.sp)
+                Text(
+                    modifier = Modifier.clickable{
+                        navController.navigate(Screens.PasswordResetRequest.name)
+                    },
+                    text = FORGET_PASS,
+                    fontSize = 15.sp,
+                    color = Color.Blue
+                )
 
-                SubmitButton(text = AGREE) {
-                    if (signUpVM.isValidNameEmailPassword()){
-                        navController.navigate(Screens.SubmitSignUp.name)
+                Spacer(modifier = Modifier.height(20.dp))
+                SubmitButton(text = LOGIN, loadingState = logInVM.isLoading) {
+                    if (logInVM.isValidEmailPassword()){
+                        logInVM.logIn()
                     }
+
                 }
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    ScreenAddOn(navController, ALREADY_HAVE, LOGIN, Screens.LogIn.name)
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
+                ) {
+                    ScreenAddOn(navController, DONT_HAVE, REGISTER, Screens.SignUp.name)
 
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
 
             }
         }
     }
+
+
+// ------------------------   Observe LogIn Request result state --------------------------//
+    LaunchedEffect(logInVM.result){
+        logInVM.result.collect { (success, _) ->
+            if (success) {
+                navController.navigate(Screens.Home.name) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            } else {
+                logInVM.displayLogInRequestError.value = true
+            }
+        }
+
+
+    }
+
+
+
+
 }
 
+
 @Composable
-fun ErrorAlert(){
+fun FormDataErrorAlert(){
     Column(
-        modifier = Modifier.padding(0.dp)
+        modifier = Modifier
+            .padding(0.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text(text = NAME_ERROR_MSG, color = Color.Red, fontSize = 13.sp)
         Text(text = EMAIL_ERROR_MSG, color = Color.Red, fontSize = 13.sp)
         Text(text = PASSWORD_ERROR_MSG, color = Color.Red, fontSize = 13.sp)
     }
@@ -148,12 +173,8 @@ fun ErrorAlert(){
 
 @Preview
 @Composable
-fun SignUpPreview() {
+fun LogInPreview() {
     WhereaboutTheme {
-
-        SignUpScreen(
-            rememberNavController(),
-            SignUpViewModel()
-        )
+        LogInScreen(rememberNavController(), LogInViewModel())
     }
 }

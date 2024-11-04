@@ -24,8 +24,7 @@ class Helpers(){
 
         fun isValidPhrase(securityQuestion: String): Boolean {
             return securityQuestion.isNotBlank() &&
-                    securityQuestion.length in 5..100 &&
-                    securityQuestion.contains(" ")
+                    securityQuestion.length in 5..100
         }
 
     }
