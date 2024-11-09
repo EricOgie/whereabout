@@ -1,5 +1,6 @@
 package com.tees.s3186984.whereabout.view.auth
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,7 +50,7 @@ import com.tees.s3186984.whereabout.wutils.REGISTER
 
 @Composable
 fun LogInScreen(navController: NavController, logInVM: LogInViewModel){
-
+    Log.d("SIGNIN", "LogInScreen: count")
     Surface(modifier = Modifier.fillMaxSize(), color = WLightGray){
         Column(
             modifier = Modifier

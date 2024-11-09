@@ -1,66 +1,118 @@
 package com.tees.s3186984.whereabout.navigation
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.ui.graphics.Color
-
+import androidx.compose.ui.unit.dp
 
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
+import com.tees.s3186984.whereabout.ui.theme.WShadyAsh
 import com.tees.s3186984.whereabout.view.auth.LogInScreen
 import com.tees.s3186984.whereabout.view.launch.OnBoardingScreen
 import com.tees.s3186984.whereabout.view.launch.SplashScreen
+import com.tees.s3186984.whereabout.view.main.ConnectionScreen
+import com.tees.s3186984.whereabout.view.main.HistoryScreen
 import com.tees.s3186984.whereabout.view.main.HomeScreen
+import com.tees.s3186984.whereabout.view.main.ProfileScreen
 import com.tees.s3186984.whereabout.viewmodel.LaunchViewModel
 import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
 
 
 /**
- * App - The main composable function that sets up the navigation structure for the app.
+ * App - The main composable function that sets up the navigation structure and system UI elements for the app.
  *
- * This function initializes the navigation controller and configures system UI elements,
- * such as the status bar color. It defines the navigation graph, starting with the splash screen
- * and providing routes to other screens.
+ * This function is responsible for initializing the navigation controller and handling navigation state,
+ * managing system UI elements (such as the status bar and navigation bar color), and displaying the appropriate
+ * screens based on the current route.
  *
- * @param context The Context from the application, needed for view models that require
- * application-level context.
  *
- * The navigation structure includes:
- * - `Screens.Splash`: The splash screen, initialized with a `LaunchViewModel`.
- * - `Screens.Onboarding`: The onboarding screen for new users.
- * - `Screens.LogIn`: The login screen, initialized with a `LogInViewModel`.
- * - `Screens.Home`: The home screen, which serves as the main user interface.
- *  - TODO - Add more screens to this list as the application grows
+ * @param context The Context from the single activity where this is called
+ * application-level context (such as accessing resources or initializing services).
  *
- * @see NavController Used to control and manage navigation between screens in the app.
- * @see NavHost Sets up the navigation graph with defined composable destinations.
- * @see rememberSystemUiController For modifying system UI elements, such as status bar color.
- * @see signUpNavGraph Adds a nested navigation graph for the sign-up flow.
+ * @see Single Activity Pattern in Android
+ * @see NavController Used for managing navigation between different composables (screens) in the app.
+ * @see NavHost A container that sets up the navigation graph and handles the actual screen switching based on the route.
+ * @see rememberSystemUiController For modifying system UI elements such as the status bar and navigation bar colors.
  */
 @Composable
 fun App(context: Context){
 
     val navController = rememberNavController()
     val systemUiController = rememberSystemUiController()
+    var currentRoute by remember { mutableStateOf(Screens.Splash.name) }
+    var statusColor by remember { mutableStateOf(Color.White) }
 
-    systemUiController.setStatusBarColor(color = Color.White, darkIcons = true)
+    systemUiController.setStatusBarColor(color = statusColor, darkIcons = true)
 
-    NavHost(navController = navController, startDestination = Screens.Splash.name) {
-        composable(Screens.Splash.name) {
-            val launchVM = LaunchViewModel(context)
-            SplashScreen(navController = navController, launchVM=launchVM)
+
+    /**
+     * LaunchedEffect - Tracks navigation destination changes to update the current route.
+     *
+     * This effect listens for changes in the navigation destination and updates the `currentRoute` state.
+     * The `currentRoute` is then used to conditionally display the bottom navigation bar and manage other UI elements.
+     */
+    LaunchedEffect(navController) {
+        navController.addOnDestinationChangedListener {_, destination, _ ->
+            currentRoute = destination.route!!
         }
-        composable(Screens.Onboarding.name) { OnBoardingScreen(navController = navController) }
-
-        composable(Screens.LogIn.name) {
-            LogInScreen(navController = navController, logInVM = LogInViewModel())
-        }
-
-        composable(Screens.Home.name) { HomeScreen(navController = navController) }
-
-        signUpNavGraph(navController)
     }
-}
 
+    /*
+        * Scaffold is used here to provide a consistent layout structure for the app.
+        * It handles the basic structure of the screen - bottom bar, and content area.
+        *
+        * The `bottomBar` parameter is conditionally shown based on the current screen route,
+        * and the navigation bar color is set dynamically using the `systemUiController`.
+    */
+    Scaffold(
+        bottomBar = {
+            if (currentRoute in Screens.screenWithBottomNavBar()){
+                statusColor = WBackgroundGray
+                systemUiController.setNavigationBarColor(color = Color.Black)
+                Box(modifier = Modifier.background(Color.Black).padding(vertical = 0.dp)){
+                    BottomNavigationBar(navController)
+                }
+            }
+        }
+
+    ) { paddingValues ->
+        NavHost(
+            modifier = Modifier.padding(paddingValues),
+            navController = navController,
+            startDestination = Screens.Splash.name
+        )
+        {
+            composable(Screens.Splash.name) {
+                val launchVM = LaunchViewModel(context)
+                SplashScreen(navController = navController, launchVM=launchVM)
+            }
+            composable(Screens.Onboarding.name) { OnBoardingScreen(navController = navController) }
+
+            composable(Screens.LogIn.name) {
+                LogInScreen(navController = navController, logInVM = LogInViewModel())
+            }
+
+            composable(Screens.Home.name){ HomeScreen(navController) }
+            composable(Screens.Profile.name){ ProfileScreen() }
+            composable(Screens.Connection.name){ ConnectionScreen() }
+            composable(Screens.History.name){ HistoryScreen() }
+
+            signUpNavGraph(navController)
+        }
+    }
+
+}

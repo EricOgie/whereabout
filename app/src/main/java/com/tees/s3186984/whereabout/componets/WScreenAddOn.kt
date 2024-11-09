@@ -29,7 +29,7 @@ import com.tees.s3186984.whereabout.ui.theme.WMeRed
  * @param questionText The question text to be displayed at the top of the component.
  * @param linkTitle The clickable link text displayed below the question, usually
  * providing an option to navigate elsewhere.
- * @param linDestination The route destination to navigate to when the link is clicked.
+ * @param linkDestination The route destination to navigate to when the link is clicked.
  *
  */
 @Composable
@@ -37,7 +37,7 @@ fun WScreenAddOn(
     navController: NavController,
     questionText: String,
     linkTitle: String,
-    linDestination: String
+    linkDestination: String
 ) {
 
     Spacer(modifier = Modifier.height(5.dp))
@@ -57,8 +57,8 @@ fun WScreenAddOn(
         modifier = Modifier
             .padding(0.dp)
             .clickable {
-                navController.navigate(linDestination) {
-                    popUpTo(0) { inclusive = true }
+                navController.navigate(linkDestination) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     launchSingleTop = true
                 }
             },

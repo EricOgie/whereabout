@@ -9,7 +9,9 @@ enum class Screens {
     PasswordReset,
     Splash,
     Onboarding,
-    Profile;
+    Profile,
+    History,
+    Connection;
 
 
     companion object {
@@ -26,6 +28,10 @@ enum class Screens {
             // Edge cases
             null -> LogIn
             else -> throw IllegalArgumentException("$path not found")
+        }
+
+        fun screenWithBottomNavBar(): List<String>{
+            return listOf(Home.name, Profile.name, Connection.name, History.name)
         }
     }
 
