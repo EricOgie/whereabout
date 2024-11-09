@@ -29,8 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.tees.s3186984.whereabout.componets.WScreenAddOn
+import com.tees.s3186984.whereabout.componets.WSignInOrSignUpAddOn
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
@@ -121,7 +120,7 @@ fun SignUpScreen(navController: NavController, signUpVM : SignUpViewModel){
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
-                    WScreenAddOn(navController, ALREADY_HAVE, LOGIN, Screens.LogIn.name)
+                    WSignInOrSignUpAddOn(navController, ALREADY_HAVE, LOGIN, Screens.LogIn.name)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
@@ -150,10 +149,5 @@ fun ErrorAlert(){
 @Composable
 fun SignUpPreview() {
     WhereaboutTheme {
-
-        SignUpScreen(
-            rememberNavController(),
-            SignUpViewModel()
-        )
     }
 }

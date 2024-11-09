@@ -25,14 +25,14 @@ import com.airbnb.lottie.compose.rememberLottieComposition
  * loop indefinitely using LottieConstants.IterateForever.
  */
 @Composable
-fun WLoadingBar(){
+fun WLoadingBar(scaleFactor: Float = 2f){
 
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.loaderbar)
     )
 
     LottieAnimation(
-        modifier = Modifier.scale(2f),
+        modifier = Modifier.scale(scaleFactor),
         composition = composition,
         iterations = LottieConstants.IterateForever
     )

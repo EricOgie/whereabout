@@ -1,14 +1,17 @@
 package com.tees.s3186984.whereabout.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tees.s3186984.whereabout.model.RegistrationFormData
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
+import com.tees.s3186984.whereabout.repository.LocalStoreRepository
 import com.tees.s3186984.whereabout.wutils.Helpers
 
-class SignUpViewModel : ViewModel() {
+class SignUpViewModel(context: Context) : ViewModel() {
 
     // States for form input fields
     var fullNameState = mutableStateOf("") // Holds the user's full name
@@ -23,7 +26,8 @@ class SignUpViewModel : ViewModel() {
     var displayScreen2ErrorState = mutableStateOf(false) // Indicates validation errors for signUp screen 2 (recovery question/answer)
 
     // Repository for Firebase authentication operations
-    private val authRepo = FirebaseAuthRepository()
+    private val authRepo = FirebaseAuthRepository(context, viewModelScope)
+    private val localStoreRepo = LocalStoreRepository(context)
 
     // LiveData to observe the result of the sign-up process
     private val _result = MutableLiveData<Pair<Boolean, String?>>()

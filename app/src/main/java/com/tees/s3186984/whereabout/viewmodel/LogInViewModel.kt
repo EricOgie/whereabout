@@ -1,13 +1,15 @@
 package com.tees.s3186984.whereabout.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 import com.tees.s3186984.whereabout.wutils.Helpers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class LogInViewModel : ViewModel(){
+class LogInViewModel(context: Context) : ViewModel(){
 
     // Mutable data state to help control view on login screens
     var emailState =  mutableStateOf("")
@@ -25,7 +27,7 @@ class LogInViewModel : ViewModel(){
     val result: StateFlow<Pair<Boolean, String?>> get() = _result
 
     // Repository for handling Firebase authentication
-    private val authRepository = FirebaseAuthRepository()
+    private val authRepository = FirebaseAuthRepository(context, viewModelScope)
 
 
     /**

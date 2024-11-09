@@ -54,6 +54,13 @@ class Helpers(){
                     phrase.length in 5..100
         }
 
+
+        fun capitalizeWords(input: String): String {
+            return input.split(" ")
+                .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+        }
+
+
     }
 }
 

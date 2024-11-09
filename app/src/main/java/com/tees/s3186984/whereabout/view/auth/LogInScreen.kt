@@ -31,12 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.tees.s3186984.whereabout.componets.WScreenAddOn
+import com.tees.s3186984.whereabout.componets.WSignInOrSignUpAddOn
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
-import com.tees.s3186984.whereabout.wutils.DONT_HAVE
+import com.tees.s3186984.whereabout.wutils.DONT_HAVE_ACC
 
 import com.tees.s3186984.whereabout.wutils.EMAIL
 import com.tees.s3186984.whereabout.wutils.EMAIL_ERROR_MSG
@@ -53,7 +52,7 @@ fun LogInScreen(navController: NavController, logInVM: LogInViewModel){
     Surface(modifier = Modifier.fillMaxSize(), color = WLightGray){
         Column(
             modifier = Modifier
-                .padding(horizontal = 15.dp, vertical = 15.dp)
+                .padding(15.dp)
                 .fillMaxSize()
         ) {
 
@@ -124,7 +123,7 @@ fun LogInScreen(navController: NavController, logInVM: LogInViewModel){
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    WScreenAddOn(navController, DONT_HAVE, REGISTER, Screens.SignUp.name)
+                    WSignInOrSignUpAddOn(navController, DONT_HAVE_ACC, REGISTER, Screens.SignUp.name)
 
                     Spacer(modifier = Modifier.height(20.dp))
                 }
@@ -173,6 +172,5 @@ fun FormDataErrorAlert(){
 @Composable
 fun LogInPreview() {
     WhereaboutTheme {
-        LogInScreen(rememberNavController(), LogInViewModel())
     }
 }

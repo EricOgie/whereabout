@@ -1,5 +1,8 @@
 package com.tees.s3186984.whereabout.componets
 
+
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -20,8 +23,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Sos
+import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
 
 /**
@@ -68,6 +78,8 @@ fun WBackButton(handleClick: () -> Unit) {
 fun WSubmitButton(
     modifier: Modifier = Modifier,
     text: String,
+    buttonColor: Color = Color.Black,
+    textColor: Color = Color.White,
     loadingState: MutableState<Boolean> = mutableStateOf(false),
     handleClick: () -> Unit )
 {
@@ -77,7 +89,7 @@ fun WSubmitButton(
         modifier = modifier
             .fillMaxWidth().height(50.dp),
         shape = RoundedCornerShape(10.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+        colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
     ) {
         if (loadingState.value){
             WLoadingBar()
@@ -85,11 +97,96 @@ fun WSubmitButton(
             Text(
                 text = text,
                 fontSize = 18.sp,
-                color = Color.White,
+                color = textColor,
                 style = MaterialTheme.typography.titleMedium
             )
         }
 
+    }
+}
+
+
+
+
+@Composable
+fun WLargeFAB(
+    shape: Shape = CircleShape,
+    scaleFactor: Float = 0.7f,
+    fabColor: Color = Color.Red,
+    contentColor: Color = Color.White,
+    icon: ImageVector = Icons.Filled.Sos,
+    handleClick: () -> Unit
+) {
+    LargeFloatingActionButton(
+        modifier = Modifier.scale(scaleFactor),
+        onClick = { handleClick() },
+        containerColor = fabColor,
+        contentColor = contentColor,
+        shape = shape,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(30.dp)
+        )
+    }
+
+}
+
+
+@Composable
+fun WSmallFAB(
+    modifier: Modifier = Modifier,
+    shape: Shape = CircleShape,
+    scaleFactor: Float = 0.85f,
+    fabColor: Color = Color.White,
+    contentColor: Color = Color.Black,
+    icon: ImageVector = Icons.Filled.QrCode,
+    handleClick: () -> Unit
+) {
+    SmallFloatingActionButton(
+        modifier = modifier.scale(scaleFactor),
+        onClick = { handleClick() },
+        containerColor = fabColor,
+        contentColor = contentColor,
+        shape = shape,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+        )
+    }
+}
+
+
+@Composable
+fun WRadioButton(
+    selected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedColor: Color = Color.Blue.copy(0.7f),
+    unselectedColor: Color = Color.Gray,
+    size: Float = 24f,
+    strokeWidth: Float = 2f
+)
+{
+    Canvas(
+        modifier = modifier
+            .size(size.dp)
+            .clickable(onClick = onSelect)
+    ) {
+        drawCircle(
+            color = if (selected) selectedColor else unselectedColor,
+            radius = size / 2,
+            style = Stroke(width = strokeWidth.dp.toPx())
+        )
+
+        if (selected) {
+            drawCircle(
+                color = selectedColor,
+                radius = (size / 2) - strokeWidth.dp.toPx() * 1.4f
+            )
+        }
     }
 }
 

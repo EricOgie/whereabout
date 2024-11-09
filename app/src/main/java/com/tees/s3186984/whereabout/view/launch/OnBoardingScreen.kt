@@ -37,7 +37,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.tees.s3186984.whereabout.R
-import com.tees.s3186984.whereabout.componets.WScreenAddOn
+import com.tees.s3186984.whereabout.componets.WSignInOrSignUpAddOn
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
@@ -113,7 +113,7 @@ fun OnBoardingScreen(navController: NavController) {
                 }
             }
 
-            WScreenAddOn(navController, ALREADY_HAVE, LOGIN, Screens.LogIn.name)
+            WSignInOrSignUpAddOn(navController, ALREADY_HAVE, LOGIN, Screens.LogIn.name)
 
         }
 

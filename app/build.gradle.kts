@@ -62,6 +62,17 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.lottie)
     implementation(libs.datastore.preferences)
+    implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.zxing.core)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.gson)
+    implementation(libs.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.guava)
+    implementation(libs.zxing.android.embedded)
+
 
 
     // Use Firebase BoM to manage Firebase SDK versions
