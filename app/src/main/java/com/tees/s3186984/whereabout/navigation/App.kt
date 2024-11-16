@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
-import com.tees.s3186984.whereabout.ui.theme.WShadyAsh
 import com.tees.s3186984.whereabout.view.auth.LogInScreen
 import com.tees.s3186984.whereabout.view.launch.OnBoardingScreen
 import com.tees.s3186984.whereabout.view.launch.SplashScreen
@@ -43,8 +42,6 @@ import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
  * @param context The Context from the single activity where this is called
  * application-level context (such as accessing resources or initializing services).
  *
- * @see Single Activity Pattern in Android
- * @see NavController Used for managing navigation between different composables (screens) in the app.
  * @see NavHost A container that sets up the navigation graph and handles the actual screen switching based on the route.
  * @see rememberSystemUiController For modifying system UI elements such as the status bar and navigation bar colors.
  */
@@ -93,7 +90,7 @@ fun App(context: Context){
         NavHost(
             modifier = Modifier.padding(paddingValues),
             navController = navController,
-            startDestination = Screens.Splash.name
+            startDestination = Screens.Home.name
         )
         {
             composable(Screens.Splash.name) {

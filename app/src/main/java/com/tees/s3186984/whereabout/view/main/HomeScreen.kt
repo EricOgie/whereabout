@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShareLocation
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.QrCode2
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -40,6 +42,7 @@ import com.tees.s3186984.whereabout.componets.LocationDetailsSheet
 import com.tees.s3186984.whereabout.componets.NotificationIconWithBadge
 import com.tees.s3186984.whereabout.componets.QRCodeContainer
 import com.tees.s3186984.whereabout.componets.QRCodeScanner
+import com.tees.s3186984.whereabout.componets.ShareLocationSheet
 import com.tees.s3186984.whereabout.componets.WLargeFAB
 import com.tees.s3186984.whereabout.componets.WSmallFAB
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
@@ -87,8 +90,11 @@ fun HomeScreen(navController: NavController) {
                 WSmallFAB(
                     fabColor = Color.Blue.copy(0.8f),
                     contentColor = Color.White,
-                    icon = Icons.Filled.ShareLocation
-                ) { isSheetOpened = true }
+                    icon = Icons.Filled.Share
+                ) {
+                    sheetContent = { ShareLocationSheet() }
+                    isSheetOpened = true
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -96,7 +102,7 @@ fun HomeScreen(navController: NavController) {
                 WSmallFAB(
                     fabColor = Color.White,
                     contentColor = Color.Black,
-                    icon = Icons.Outlined.Camera
+                    icon = Icons.Outlined.QrCodeScanner
                 ) {
                     sheetContent = { QRCodeScanner() }
                     isSheetOpened = true
