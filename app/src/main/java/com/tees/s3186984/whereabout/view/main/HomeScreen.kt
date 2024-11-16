@@ -1,122 +1,183 @@
 package com.tees.s3186984.whereabout.view.main
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DevicesOther
-import androidx.compose.material.icons.outlined.Directions
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.ShareLocation
+import androidx.compose.material.icons.outlined.Camera
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.QrCode2
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.tees.s3186984.whereabout.componets.WBadge
-import com.tees.s3186984.whereabout.componets.WFloatingActionButton
+import com.tees.s3186984.whereabout.componets.LocationDetailsSheet
+import com.tees.s3186984.whereabout.componets.NotificationIconWithBadge
+import com.tees.s3186984.whereabout.componets.QRCodeContainer
+import com.tees.s3186984.whereabout.componets.QRCodeScanner
+import com.tees.s3186984.whereabout.componets.WLargeFAB
+import com.tees.s3186984.whereabout.componets.WSmallFAB
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
 
+    val sheetState = rememberModalBottomSheetState()
+    var isSheetOpened by rememberSaveable { mutableStateOf(false) }
+    var sheetContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
     // Parent Container
-    Box(
-        modifier = Modifier
-            .background(color = WBackgroundGray)
-            .fillMaxSize()
-    ){
-
-        // Notification Badge
-        Row(
-            modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(15.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            WBadge(
-                modifier = Modifier.scale(0.9f),
-                noticeCount = 4,
-                glowColor = Color.White,
-                iconSize = 45,
-                hasBorderStroke = false
-            )
-        }
-
-
-        // Bottom Action section
-        Column(
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    )
+    {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .align(Alignment.BottomCenter)
-                .background(
-                    color = WBackgroundGray,
-                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp)
-                ),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.Start
+                .background(color = WBackgroundGray)
+                .fillMaxSize()
         )
         {
 
-            Row(
+            // ------------ Notification Badge ----------------- //
+            NotificationIconWithBadge(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .align(Alignment.TopEnd),
+                messageCount = 4,
+            ){}
+
+            // ----------- Side Feature Pane ------------------//
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
                     .wrapContentHeight()
-                    .padding(horizontal = 15.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Container for the first WBadge
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight(),
-                    contentAlignment = Alignment.CenterStart
+                    .align(Alignment.BottomEnd)
+                    .background(color = Color.Transparent),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+
+                // ---------------- Share Location Floating Action Bar -------- //
+                WSmallFAB(
+                    fabColor = Color.Blue.copy(0.8f),
+                    contentColor = Color.White,
+                    icon = Icons.Filled.ShareLocation
+                ) { isSheetOpened = true }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ---------------- QRCode Scanner Floating Action Bar -------- //
+                WSmallFAB(
+                    fabColor = Color.White,
+                    contentColor = Color.Black,
+                    icon = Icons.Outlined.Camera
                 ) {
-                    WBadge(
-                        modifier = Modifier.size(45.dp),
-                        glowColor = Color.White,
-                        icon = Icons.Outlined.Directions
-                    )
+                    sheetContent = { QRCodeScanner() }
+                    isSheetOpened = true
                 }
 
-                WFloatingActionButton(title = "SOS" ) {  }
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Container for the second WBadge
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight(),
-                    contentAlignment = Alignment.CenterEnd
+                // ---------------- SOS Floating Action Bar -------- //
+                WLargeFAB{ Log.d("HOME-SCREEN", "QRCODE: yes") }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ---------------- Device Pairing QRCode Floating Action Bar -------- //
+                WSmallFAB(
+                    fabColor = Color.White,
+                    contentColor = Color.Black.copy(1f),
+                    icon = Icons.Outlined.QrCode2
                 ) {
-                    WBadge(
-                        modifier = Modifier.size(45.dp),
-                        glowColor = Color.White,
-                        icon = Icons.Filled.DevicesOther,
-                        iconTint = Color.Blue
-                    )
+                    sheetContent = { QRCodeContainer()}
+                    isSheetOpened = true
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ---------------- WHERE AM I FAB ------------- //
+                WSmallFAB(
+                    fabColor = Color.Blue.copy(0.85f),
+                    contentColor = Color.White,
+                    icon = Icons.Filled.LocationOn
+                ) {
+                    sheetContent = { LocationDetailsSheet() }
+                    isSheetOpened = true
+                }
+
+                Spacer(modifier = Modifier.height(80.dp))
             }
 
+        }
 
-
-
+        // --------------- Bottom Modal Sheet ---------------------- //
+        if (isSheetOpened){
+            ModalBottomSheet(
+                onDismissRequest = {isSheetOpened = false},
+                containerColor = Color.White,
+                sheetState = sheetState,
+                scrimColor = Color.Transparent
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                ) {
+                    sheetContent()
+                }
+            }
         }
 
     } // - End of Parent Container
 
+
+
 } // - End of Composable Screen
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WBottomModalSheet(sheetContent: @Composable (ColumnScope.() -> Unit)){
+    ModalBottomSheet(
+        onDismissRequest = {/*TODO*/},
+        containerColor = Color.White
+    ) {
+        Text(text = "SOME RANDOM TEXT")
+        sheetContent()
+    }
+}
+
+
+
+
 
 @Preview(showBackground = true)
 @Composable

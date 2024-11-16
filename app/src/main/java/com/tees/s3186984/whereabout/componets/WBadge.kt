@@ -1,71 +1,57 @@
 package com.tees.s3186984.whereabout.componets
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.tees.s3186984.whereabout.ui.theme.WShadyAsh
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Badge
+
+
 
 @Composable
-fun WBadge(
+fun NotificationIconWithBadge(
     modifier: Modifier = Modifier,
-    noticeCount: Int = 0,
-    glowColor: Color = WShadyAsh.copy(0.4f),
-    icon: ImageVector = Icons.Outlined.Notifications,
-    iconTint: Color = Color.Black.copy(0.7f),
-    iconSize: Int = 40,
-    hasBorderStroke: Boolean = true
-){
-    Box(
-        modifier = modifier
-            .size(60.dp)
-            .background(glowColor, shape = CircleShape)
-            .then(
-                if(hasBorderStroke){
-                    modifier.border(0.4.dp, Color.Black.copy(0.5f), shape = CircleShape)
-                }else { modifier}
-            )
-    ){
+    messageCount: Int,
+    size: Int = 30,
+    noticeIconColor: Color = Color.Black,
+    badgeColor: Color = Color.Red,
+    badgeTextColor: Color = Color.White,
+    badgeTextSize: Int = 14,
+    handleClick: () -> Unit
+) {
+    Box (modifier = modifier) {
         Icon(
-            imageVector = icon,
-            contentDescription = null,
+            imageVector = Icons.Default.Notifications,
+            contentDescription = "Notification",
             modifier = Modifier
-                .size(iconSize.dp)
-                .align(Alignment.Center)
-                .padding(8.dp),
-            tint = iconTint
+                .size(size.dp)
+                .clickable{
+                    handleClick()
+                },
+            tint = noticeIconColor
         )
 
-        if (noticeCount > 0){
-            Box(
-                contentAlignment = Alignment.Center,
+        if (messageCount > 0) {
+            Badge(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(30.dp)
-                    .background(Color.Red, shape = CircleShape)
-            ){
+                    .offset(x = 20.dp, y = (-2).dp),
+                containerColor = badgeColor,
+                contentColor = badgeTextColor
+            ) {
                 Text(
-                    text = noticeCount.toString(),
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    text = if (messageCount > 99) "99+" else messageCount.toString(),
+                    fontSize = badgeTextSize.sp
                 )
             }
         }
@@ -74,11 +60,10 @@ fun WBadge(
 
 
 
-
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun Preview() {
     WhereaboutTheme {
-        WBadge(noticeCount = 2)
+        NotificationIconWithBadge(messageCount=5){}
     }
 }
