@@ -1,5 +1,6 @@
 package com.tees.s3186984.whereabout.view.main
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,9 +16,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShareLocation
-import androidx.compose.material.icons.outlined.Camera
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,7 +24,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.LocationDetailsSheet
 import com.tees.s3186984.whereabout.componets.NotificationIconWithBadge
 import com.tees.s3186984.whereabout.componets.QRCodeContainer
@@ -47,14 +46,20 @@ import com.tees.s3186984.whereabout.componets.WLargeFAB
 import com.tees.s3186984.whereabout.componets.WSmallFAB
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
+import com.tees.s3186984.whereabout.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    homeViewModel: HomeViewModel,
+    context: Context,
+    navBarIndexState: MutableState<Int>
+) {
 
     val sheetState = rememberModalBottomSheetState()
     var isSheetOpened by rememberSaveable { mutableStateOf(false) }
-    var sheetContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
+
     // Parent Container
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -92,7 +97,7 @@ fun HomeScreen(navController: NavController) {
                     contentColor = Color.White,
                     icon = Icons.Filled.Share
                 ) {
-                    sheetContent = { ShareLocationSheet() }
+                    homeViewModel.sheetContent.value = { ShareLocationSheet() }
                     isSheetOpened = true
                 }
 
@@ -104,7 +109,9 @@ fun HomeScreen(navController: NavController) {
                     contentColor = Color.Black,
                     icon = Icons.Outlined.QrCodeScanner
                 ) {
-                    sheetContent = { QRCodeScanner() }
+                    homeViewModel.sheetContent.value = {
+                        QRCodeScanner(navController, homeViewModel, context, navBarIndexState = navBarIndexState)
+                    }
                     isSheetOpened = true
                 }
 
@@ -121,7 +128,7 @@ fun HomeScreen(navController: NavController) {
                     contentColor = Color.Black.copy(1f),
                     icon = Icons.Outlined.QrCode2
                 ) {
-                    sheetContent = { QRCodeContainer()}
+                    homeViewModel.sheetContent.value = { QRCodeContainer(homeViewModel = homeViewModel)}
                     isSheetOpened = true
                 }
 
@@ -133,9 +140,10 @@ fun HomeScreen(navController: NavController) {
                     contentColor = Color.White,
                     icon = Icons.Filled.LocationOn
                 ) {
-                    sheetContent = { LocationDetailsSheet() }
+                    homeViewModel.sheetContent.value = { LocationDetailsSheet() }
                     isSheetOpened = true
                 }
+
 
                 Spacer(modifier = Modifier.height(80.dp))
             }
@@ -155,7 +163,7 @@ fun HomeScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(400.dp)
                 ) {
-                    sheetContent()
+                    homeViewModel.sheetContent.value()
                 }
             }
         }
@@ -169,26 +177,10 @@ fun HomeScreen(navController: NavController) {
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WBottomModalSheet(sheetContent: @Composable (ColumnScope.() -> Unit)){
-    ModalBottomSheet(
-        onDismissRequest = {/*TODO*/},
-        containerColor = Color.White
-    ) {
-        Text(text = "SOME RANDOM TEXT")
-        sheetContent()
-    }
-}
-
-
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun HomePreview() {
     WhereaboutTheme {
-        HomeScreen(navController = rememberNavController())
+//        HomeScreen(navController = rememberNavController())
     }
 }

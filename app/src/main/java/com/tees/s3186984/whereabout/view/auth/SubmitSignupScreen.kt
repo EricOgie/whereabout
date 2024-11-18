@@ -28,6 +28,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import android.content.Context
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
@@ -140,9 +141,5 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
 @Composable
 fun SubmitSignUpScreenPreview() {
     WhereaboutTheme {
-        SubmitSignUpScreen(
-            rememberNavController(),
-            SignUpViewModel()
-        )
     }
 }

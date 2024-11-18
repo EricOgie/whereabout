@@ -51,6 +51,7 @@ var WELCOME = buildAnnotatedString {
 
 //----------------------- TITLES RELATED CONSTANTS ----------------------- //
 const val NAME = "fullname"
+const val CONNECTION = "connections"
 const val REGISTER = "Sign Up"
 const val LOGIN = "Sign In"
 const val EMAIL = "Email"
@@ -71,4 +72,8 @@ const val AUTH_TOKEN_KEY = "auth_token"
 const val FORGET_PASS = "Forget your password?"
 const val ALREADY_HAVE = "Already have an account?"
 const val DONT_HAVE = "Don't have an account?"
+
+
+
+const val REQUEST_CODE_CAMERA = 1001
 

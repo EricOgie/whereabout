@@ -1,21 +1,28 @@
 package com.tees.s3186984.whereabout.repository
 
-import android.util.Log
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.tees.s3186984.whereabout.core.DeviceManager
 import com.tees.s3186984.whereabout.model.PasswordRecovery
 import com.tees.s3186984.whereabout.model.RegistrationFormData
+import com.tees.s3186984.whereabout.model.User
 import com.tees.s3186984.whereabout.wutils.DEFAULT_ERROR_MSG
 import com.tees.s3186984.whereabout.wutils.GENERIC_ERR_MSG
+import com.tees.s3186984.whereabout.wutils.NAME
 import com.tees.s3186984.whereabout.wutils.PASSWORD_SECURITY
 import com.tees.s3186984.whereabout.wutils.USER
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-class FirebaseAuthRepository {
+class FirebaseAuthRepository(context: Context, private val scope: CoroutineScope) {
 
     // Firebase instances
     private val  auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private val localStoreRepo = LocalStoreRepository(context)
+
 
 
     /**
@@ -32,6 +39,8 @@ class FirebaseAuthRepository {
             .addOnCompleteListener{task ->
                 if (task.isSuccessful) {
                     handleResult(true, null)
+                // TODO - check that user still using device registered when they signed up else
+                // update user device here
                 }else{
                     var errorMessage  = task.exception?.message ?: DEFAULT_ERROR_MSG
                     handleResult(false, errorMessage)
@@ -64,7 +73,10 @@ class FirebaseAuthRepository {
                         return@addOnCompleteListener
                     }
 
-                    val user = formData.makeUser(userId)
+                    // I will pass null to makeDevice so it can create a fresh deviceId since
+                    // the user is just setting up
+                    val userDevice = DeviceManager.makeDevice(deviceId=null)
+                    val user = formData.makeUser(userId, userDevice)
                     val recoveryData = PasswordRecovery(
                         question = formData.recoveryQuestion,
                         answer = formData.recoveryAnswer
@@ -84,6 +96,11 @@ class FirebaseAuthRepository {
                     firestoreBatch.commit().addOnCompleteListener { fireStoreTask ->
                         if (fireStoreTask.isSuccessful){
                             handleResult(true, null)
+                            // Save device ID to local store using user ID as key
+                            scope.launch{
+                                localStoreRepo.saveStringPreference(userId, userDevice.deviceId)
+                                localStoreRepo.saveStringPreference(NAME, user.name)
+                            }
                         } else{
                             handleResult(false, fireStoreTask.exception?.message)
                         }
@@ -112,6 +129,5 @@ class FirebaseAuthRepository {
     fun signOut() {
         auth.signOut()
     }
-
 
 }

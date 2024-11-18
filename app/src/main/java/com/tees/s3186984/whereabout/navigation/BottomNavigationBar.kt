@@ -16,6 +16,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -35,18 +37,15 @@ import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
  * @param navController The NavHostController used for navigating between different screens.
  */
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
-    // State variable to keep track of the selected item index, preserved across recompositions
-    var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
-
+fun BottomNavigationBar(navController: NavHostController, selectedItemIndexState: MutableState<Int>) {
     NavigationBar(containerColor = Color.Black) {
         navItems.forEachIndexed { index, item ->
-            var isSelected = selectedItemIndex == index
+            var isSelected = selectedItemIndexState.value == index
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
                     // Update the selected item index and navigate to the chosen scree
-                    selectedItemIndex = index
+                    selectedItemIndexState.value = index
                     // Navigate accordingly
                     navController.navigate(item.title){
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -55,7 +54,7 @@ fun BottomNavigationBar(navController: NavHostController) {
                 },
                 icon = {
                     Icon(
-                        imageVector = if (selectedItemIndex == index) item.onSelectedIcon else item.defaultIcon,
+                        imageVector = if (selectedItemIndexState.value == index) item.onSelectedIcon else item.defaultIcon,
                         contentDescription = item.title,
                         tint = if (isSelected) Color.White else Color.Gray
                     )
@@ -126,7 +125,7 @@ val navItems = listOf<NavigationItem>(
 @Composable
 fun NavBarPreview() {
     WhereaboutTheme {
-        BottomNavigationBar(rememberNavController())
+
     }
 }
 

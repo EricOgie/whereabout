@@ -11,10 +11,11 @@ import kotlin.String
  * @param profileImage URL or path to the user's profile image.
  */
 data class User(
-    val userId: String,
-    val name: String,
-    val email: String,
-    val profileImage: String
+    val userId: String = "",
+    val name: String = "",
+    val email: String = "",
+    val profileImage: String = "",
+    val device: Device = Device()
 )
 
 /**
@@ -49,14 +50,36 @@ data class RegistrationFormData(
     val recoveryQuestion: String,
     val recoveryAnswer: String
 ){
-    fun makeUser(id: String) : User {
+    fun makeUser(id: String, userDevice: Device) : User {
         return User(
             userId = id,
             name = name,
             email = email,
-            profileImage = ""
+            profileImage = "",
+            device = userDevice
         )
     }
 }
+
+/**
+ * Embedding the Device data in models like User and Connection introduces redundancy,
+ * since the same device information might exist in two different places (e.g., in User
+ * and in Connection). This could lead to potential data inconsistencies.
+ *
+ * However, this trade-off is accepted in order to avoid multiple queries, as Firebase
+ * does not support joins or complex query operations (e.g., querying connections and
+ * separately fetching device details from a different collection).
+ *
+ * By embedding the device information, we ensure that querying the connections
+ * is fast and efficient, without the need for additional lookups. This approach
+ * favors performance and simplicity in data retrieval, but requires careful management
+ * of data consistency.
+ */
+data class Device(
+    val deviceId: String = "",
+    val model: String = "",
+    val brand: String = "",
+    val deviceName: String = "",
+)
 
 

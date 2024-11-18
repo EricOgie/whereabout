@@ -1,9 +1,11 @@
 package com.tees.s3186984.whereabout.navigation
 
+import android.content.Context
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+
 import com.tees.s3186984.whereabout.view.auth.SignUpScreen
 import com.tees.s3186984.whereabout.view.auth.SubmitSignUpScreen
 import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
@@ -28,10 +30,10 @@ import com.tees.s3186984.whereabout.wutils.SIGNUP
  * @see composable For defining individual composable destinations within the navigation graph.
  * @see navigation For setting up a nested navigation flow within the main graph.
  */
-fun NavGraphBuilder.signUpNavGraph(navController:NavController){
+fun NavGraphBuilder.signUpNavGraph(navController:NavController, context: Context){
 
     // ViewModel for managing state and logic in both screens of the sign-up flow
-    val signUpViewModel = SignUpViewModel()
+    val signUpViewModel = SignUpViewModel(context)
 
     navigation(startDestination = Screens.SignUp.name, SIGNUP){
 

@@ -150,10 +150,5 @@ fun ErrorAlert(){
 @Composable
 fun SignUpPreview() {
     WhereaboutTheme {
-
-        SignUpScreen(
-            rememberNavController(),
-            SignUpViewModel()
-        )
     }
 }

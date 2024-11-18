@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tees.s3186984.whereabout.navigation.Screens
-import com.tees.s3186984.whereabout.repository.PreferencesRepository
+import com.tees.s3186984.whereabout.repository.LocalStoreRepository
 import com.tees.s3186984.whereabout.wutils.AUTH_TOKEN_KEY
 import com.tees.s3186984.whereabout.wutils.ONBOARDING_COMPLETE_KEY
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ class LaunchViewModel(context: Context) : ViewModel() {
     private var isCountdownCompleted = false
 
     // Repository for accessing datastore ( a replacement for shared preferences )
-    private val preferenceRepo = PreferencesRepository(context = context)
+    private val preferenceRepo = LocalStoreRepository(context = context)
 
     // Destination to navigate to after the countdown and checks
     lateinit var navigationDestination: String

@@ -1,5 +1,6 @@
 package com.tees.s3186984.whereabout.view.auth
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tees.s3186984.whereabout.componets.WScreenAddOn
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
@@ -174,6 +174,5 @@ fun FormDataErrorAlert(){
 @Composable
 fun LogInPreview() {
     WhereaboutTheme {
-        LogInScreen(rememberNavController(), LogInViewModel())
     }
 }

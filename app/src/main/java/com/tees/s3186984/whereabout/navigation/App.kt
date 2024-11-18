@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -27,6 +30,7 @@ import com.tees.s3186984.whereabout.view.main.ConnectionScreen
 import com.tees.s3186984.whereabout.view.main.HistoryScreen
 import com.tees.s3186984.whereabout.view.main.HomeScreen
 import com.tees.s3186984.whereabout.view.main.ProfileScreen
+import com.tees.s3186984.whereabout.viewmodel.HomeViewModel
 import com.tees.s3186984.whereabout.viewmodel.LaunchViewModel
 import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
 
@@ -52,6 +56,7 @@ fun App(context: Context){
     val systemUiController = rememberSystemUiController()
     var currentRoute by remember { mutableStateOf(Screens.Splash.name) }
     var statusColor by remember { mutableStateOf(Color.White) }
+    val selectedItemIndexState = rememberSaveable { mutableStateOf(0) }
 
     systemUiController.setStatusBarColor(color = statusColor, darkIcons = true)
 
@@ -81,7 +86,7 @@ fun App(context: Context){
                 statusColor = WBackgroundGray
                 systemUiController.setNavigationBarColor(color = Color.Black)
                 Box(modifier = Modifier.background(Color.Black).padding(vertical = 0.dp)){
-                    BottomNavigationBar(navController)
+                    BottomNavigationBar(navController, selectedItemIndexState)
                 }
             }
         }
@@ -90,7 +95,7 @@ fun App(context: Context){
         NavHost(
             modifier = Modifier.padding(paddingValues),
             navController = navController,
-            startDestination = Screens.Home.name
+            startDestination = Screens.Splash.name
         )
         {
             composable(Screens.Splash.name) {
@@ -100,15 +105,24 @@ fun App(context: Context){
             composable(Screens.Onboarding.name) { OnBoardingScreen(navController = navController) }
 
             composable(Screens.LogIn.name) {
-                LogInScreen(navController = navController, logInVM = LogInViewModel())
+                val logInVM = LogInViewModel(context)
+                LogInScreen(navController = navController, logInVM = logInVM)
             }
 
-            composable(Screens.Home.name){ HomeScreen(navController) }
+            composable(Screens.Home.name){
+                val homeViewModel = HomeViewModel(context)
+                HomeScreen(
+                    navController = navController,
+                    homeViewModel = homeViewModel,
+                    context = context,
+                    navBarIndexState = selectedItemIndexState
+                )
+            }
             composable(Screens.Profile.name){ ProfileScreen() }
             composable(Screens.Connection.name){ ConnectionScreen() }
             composable(Screens.History.name){ HistoryScreen() }
 
-            signUpNavGraph(navController)
+            signUpNavGraph(navController, context)
         }
     }
 
