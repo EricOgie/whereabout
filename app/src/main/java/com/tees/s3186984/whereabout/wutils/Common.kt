@@ -57,11 +57,11 @@ sealed class MapInteractivityState{
  * context for any other initialization.
  *
  * Example:
- *
+ * ```
  * val viewModel: MyViewModel = viewModel(
  *     factory = ViewModelWithContextFactory(context)
  * )
- *
+ * ```
  * The factory will provide the required Context when creating the ViewModel.
  */
 class ViewModelWithContextFactory(private val context: Context) : ViewModelProvider.Factory {

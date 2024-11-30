@@ -34,6 +34,7 @@ import com.tees.s3186984.whereabout.view.main.ProfileScreen
 import com.tees.s3186984.whereabout.viewmodel.HomeViewModel
 import com.tees.s3186984.whereabout.viewmodel.LaunchViewModel
 import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
+import com.tees.s3186984.whereabout.viewmodel.NotificationViewmodel
 import com.tees.s3186984.whereabout.viewmodel.OnboardingViewModel
 import com.tees.s3186984.whereabout.viewmodel.PairedConnectionViewModel
 import com.tees.s3186984.whereabout.viewmodel.ProfileViewModel
@@ -65,6 +66,9 @@ fun App(context: Context){
     val signUpVM: SignUpViewModel = viewModel(factory = ViewModelWithContextFactory(context))
     systemUiController.setStatusBarColor(color = Color.Transparent, darkIcons = true)
 
+    // Create  an instance of NotificationViewmodel that can be accessed by view/screen
+    // Note: This NotificationViewmodel exposes a global Notification List.
+    val notificationViewmodel: NotificationViewmodel = viewModel()
 
     /**
      * LaunchedEffect - Tracks navigation destination changes to update the current route.
@@ -126,13 +130,14 @@ fun App(context: Context){
                 HomeScreen(
                     navController = navController,
                     homeViewModel = homeViewModel,
+                    notificationViewmodel = notificationViewmodel
                 )
             }
 
             composable(Screens.Profile.name){
                 val profileVM: ProfileViewModel = viewModel(factory = ViewModelWithContextFactory(context))
                 bottomBarSelectedItemIndexState.value = 2
-                ProfileScreen(profileViewModel = profileVM)
+                ProfileScreen(profileViewModel = profileVM, navController = navController)
             }
 
             composable(Screens.Connection.name){

@@ -2,6 +2,7 @@ package com.tees.s3186984.whereabout.componets
 
 
 import android.Manifest
+import android.location.Location
 import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import com.google.maps.android.compose.Circle
 import com.tees.s3186984.whereabout.wutils.ADDRESS_RESOLUTION_ERROR
 import com.tees.s3186984.whereabout.wutils.Helpers
 import com.tees.s3186984.whereabout.wutils.MapInteractivityState
+import com.tees.s3186984.whereabout.wutils.TEN
 
 /**
  * A composable function that embed and displays a Google Map with location-based interactivity.
@@ -71,6 +73,7 @@ import com.tees.s3186984.whereabout.wutils.MapInteractivityState
 @Composable
 fun GoogleMapView(
     modifier: Modifier = Modifier,
+    handleOnLocationUpdate: (LatLng) -> Unit = {},
     handleLocationPinClick: (MapInteractivityState) -> Unit
 )
 {
@@ -79,6 +82,7 @@ fun GoogleMapView(
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }
+    var isFirstTimeUpdate = true
 
     val locationRequest = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 10000)
         .setMinUpdateIntervalMillis(5000)
@@ -96,7 +100,26 @@ fun GoogleMapView(
         object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
-                    currentLocation = LatLng(location.latitude, location.longitude)
+                    val locationLatLng = LatLng(location.latitude, location.longitude)
+
+                    if (isFirstTimeUpdate){
+                        handleOnLocationUpdate(locationLatLng)
+                        isFirstTimeUpdate = false
+                    }
+
+                    // To prevent emitting location changes for every negligible change in location
+                    // we calculate the change in distance and check that it is at least 10meters
+                    // if it is, then we emit a location change.
+                    val locationChangeMagnitude = Helpers.calculateDistanceBetweenLocations(
+                        startLocation = currentLocation,
+                        endLocation = locationLatLng
+                    )
+                    if (locationChangeMagnitude >= TEN.toDouble()){
+                        handleOnLocationUpdate(locationLatLng)
+                    }
+
+                    currentLocation = locationLatLng
+
                 }
             }
         }
@@ -167,6 +190,16 @@ fun GoogleMapView(
                 strokeColor = Color.Blue.copy(0.1f),
                 strokeWidth = 2f
             )
+        }
+    }
+}
+
+
+fun LatLng?.toLocation(provider: String = "default"): Location? {
+    return this?.let { latLng ->
+        Location(provider).apply {
+            latitude = latLng.latitude
+            longitude = latLng.longitude
         }
     }
 }

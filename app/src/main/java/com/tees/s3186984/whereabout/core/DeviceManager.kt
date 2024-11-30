@@ -18,22 +18,23 @@ object DeviceManager {
     val gson = Gson()
 
 
-    fun makeDevice(deviceId: String?): Device{
+    fun makeDevice(deviceId: String?, fcmToken: String): Device{
         return Device(
             deviceId = deviceId?: generateDeviceUUID(),
             model = model,
             brand = brand,
             deviceName = deviceName,
+            fcmToken = fcmToken
         )
     }
 
-    fun makeConnectionRequestData(userId: String, userName: String, deviceId: String): String{
+    fun makeConnectionRequestData(userId: String, userName: String, deviceId: String, fcmToken: String): String{
         val initiatorFirstName = userName.split(" ").firstOrNull() ?: ""
 
         return gson.toJson(ConnectionRequest(
             initiatorId = userId,
             initiatorFirstName = initiatorFirstName,
-            initiatorDevice = makeDevice(deviceId),
+            initiatorDevice = makeDevice(deviceId, fcmToken),
             createdAt = System.currentTimeMillis()
         ))
     }

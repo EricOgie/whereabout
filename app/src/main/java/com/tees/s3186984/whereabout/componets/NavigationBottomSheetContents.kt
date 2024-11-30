@@ -46,8 +46,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.DevicesOther
 
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -629,8 +632,13 @@ fun LocationDetailsSheet(
  * Shows a share time duration, and devices to share location with.
  */
 @Composable
-fun ShareLocationSheet(connections: List<Connection>) {
-    val selectedConnections: MutableList<String> = mutableListOf()
+fun ShareLocationSheet(
+    connections: List<Connection>,
+    handleShareLocation: (duration: Int, bucketListOfRecipientIDs: List<String>) -> Unit
+)
+{
+    val selectedConnections = remember { mutableStateListOf<String>() }
+    val shareLocationDuration = remember { mutableStateOf(1) }
 
     Column(
         Modifier.fillMaxSize(),
@@ -656,25 +664,20 @@ fun ShareLocationSheet(connections: List<Connection>) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(0.dp),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row {
-                    WRadioButton(
-                        modifier = Modifier.padding(0.dp),
-                        selected = true,
-                        onSelect = {},
-                        size = 40f
-                    )
 
                     Column{
                         Text(
-                            text = "For 2 hours", color = Color.Black,
+                            text = "For ${shareLocationDuration.value} hours",
+                            color = Color.Black,
                             fontSize = 14.sp
 
                         )
                         Text(
-                            text = "Until 13.15",
+                            text = "Until ${Helpers.getFormattedTimeOfDay(shareLocationDuration.value)}",
                             color = Color.Gray,
                             style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal),
                         )
@@ -683,43 +686,32 @@ fun ShareLocationSheet(connections: List<Connection>) {
 
                 Row(horizontalArrangement = Arrangement.End) {
 
+                    // -- ADD Button ---------//
                     WSmallFAB(
                         fabColor = Color.Blue.copy(0.8f),
                         contentColor = Color.White,
                         scaleFactor = 0.55f,
-                        icon = Icons.Filled.Add
-                    ) {  }
+                        icon = Icons.Filled.Add,
+                        handleClick = {
+                            shareLocationDuration.value = shareLocationDuration.value + 1
+                        }
+                    )
 
+                    // -- SUBTRACT Button ---------//
                     WSmallFAB(
                         fabColor = Color.Red.copy(0.8f),
                         contentColor = Color.White,
                         scaleFactor = 0.55f,
-                        icon = Icons.Filled.Remove
-                    ) {  }
+                        icon = Icons.Filled.Remove,
+                        handleClick = {
+                            if (shareLocationDuration.value > 1){
+                                shareLocationDuration.value = shareLocationDuration.value - 1
+                            }
+                        }
+                    )
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                WRadioButton(
-                    modifier = Modifier.padding(0.dp),
-                    selected = false,
-                    onSelect = {},
-                    size = 40f
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "Until you turn sharing off",
-                    color = Color.Black,
-                    fontSize = 14.sp
-                )
-            }
         }
 
 
@@ -762,11 +754,11 @@ fun ShareLocationSheet(connections: List<Connection>) {
                         WSelectableCircularImage(
                             id = connection.connectionId,
                             title = if (connection.tag.isEmpty()) connection.connectedUserId else connection.tag
-                        ) { connectionIde ->
-                            if (selectedConnections.contains(connectionIde)){
-                                selectedConnections.remove(connectionIde)
+                        ) { pairedConnectionID ->
+                            if (selectedConnections.contains(pairedConnectionID)){
+                                selectedConnections.remove(pairedConnectionID)
                             }else {
-                                selectedConnections.add(connectionIde)
+                                selectedConnections.add(pairedConnectionID)
                             }
                         }
                     }
@@ -785,8 +777,21 @@ fun ShareLocationSheet(connections: List<Connection>) {
                 .fillMaxWidth()
                 .padding(end = 8.dp),
             horizontalArrangement = Arrangement.Center
-        ){
-            TextButton(onClick = {}) {
+        )
+        {
+
+            val isEnabled by remember { derivedStateOf { selectedConnections.isNotEmpty() } }
+
+            TextButton(
+                enabled = isEnabled,
+                onClick = {
+                    handleShareLocation(
+                        shareLocationDuration.value,
+                        selectedConnections
+                    )
+                },
+                modifier = Modifier.alpha(if (isEnabled) 1f else 0.5f)
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = null,

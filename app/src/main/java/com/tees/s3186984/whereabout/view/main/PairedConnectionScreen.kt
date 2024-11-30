@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,12 +30,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tees.s3186984.whereabout.componets.ConnectionDetailSheet
-import com.tees.s3186984.whereabout.componets.DeleteConnectionSheet
+import com.tees.s3186984.whereabout.componets.ConfirmBottomSheet
 import com.tees.s3186984.whereabout.componets.PairedConnectionItem
 import com.tees.s3186984.whereabout.ui.theme.WBlack75
 import com.tees.s3186984.whereabout.ui.theme.WLightGray
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 import com.tees.s3186984.whereabout.viewmodel.PairedConnectionViewModel
+import com.tees.s3186984.whereabout.wutils.CONFIRM
 import com.tees.s3186984.whereabout.wutils.CONNECTION_TITLE
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
 
@@ -77,12 +79,14 @@ fun PairedConnectionScreen(connectionVM: PairedConnectionViewModel){
                     PairedConnectionItem(
                         pairedConnection = connection,
                         handleDeleteClick = { clickedItem ->
+                            val connectionName = if (clickedItem .tag.isNotEmpty()) clickedItem.tag else clickedItem.connectedUserFirstName
                             // Mount Deletion sheet on Bottom Modal Drawer
                             connectionVM.sheetContent.value = {
-                                DeleteConnectionSheet(
+                                ConfirmBottomSheet(
                                     requestState = connectionVM.networkRequestState,
-                                    connection = clickedItem,
-                                    handleDelete = { pairedConnectionId ->
+                                    itemId = clickedItem.connectionId,
+                                    confirmPromptMessage = "$CONFIRM Delete $connectionName from your connections?",
+                                    handleConfirmAction = { pairedConnectionId ->
                                         connectionVM.deletePairedConnection(pairedConnectionId)
                                     },
                                     //Unload Bottom Modal Drawer
@@ -136,7 +140,7 @@ fun PairedConnectionScreen(connectionVM: PairedConnectionViewModel){
     }
 
     // --------- Observe and respond to stateful data --------------- //
-    val networkRequestState by connectionVM.networkRequestState
+    val networkRequestState by connectionVM.networkRequestState.collectAsState()
 
     when(networkRequestState){
         is PossibleRequestState.Success -> {

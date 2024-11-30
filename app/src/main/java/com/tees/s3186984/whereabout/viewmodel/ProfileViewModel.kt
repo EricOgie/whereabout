@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.tees.s3186984.whereabout.model.User
+import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 import com.tees.s3186984.whereabout.repository.LocalStoreRepository
 import com.tees.s3186984.whereabout.wutils.FETCHING_ERROR
+import com.tees.s3186984.whereabout.wutils.LOGOUT_ERROR
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
 import com.tees.s3186984.whereabout.wutils.USER
 import kotlinx.coroutines.launch
@@ -19,9 +21,13 @@ class ProfileViewModel(context: Context) : ViewModel(){
     val gson = Gson()
     // Repositories for Local Storage
     val localStoreRepo = LocalStoreRepository(context = context)
+    val firebaseRepo = FirebaseAuthRepository(context = context, viewModelScope)
 
     private val _requestResultState = MutableStateFlow<PossibleRequestState<User>>(PossibleRequestState.Idle)
     val requestResultState: StateFlow<PossibleRequestState<User>> get() = _requestResultState
+
+    private  val _logOutState = MutableStateFlow(false)
+    val logOutState get() = _logOutState
 
 
     // Initialize the ViewModel by fetching the cached user and paired connections
@@ -52,6 +58,23 @@ class ProfileViewModel(context: Context) : ViewModel(){
         }catch (e: Exception){
 
             _requestResultState.value = PossibleRequestState.Failure(FETCHING_ERROR + USER)
+            e.printStackTrace()
+        }
+    }
+
+    fun logOut(){
+        _requestResultState.value = PossibleRequestState.ScreenLoading
+
+        try {
+
+            firebaseRepo.signOut()
+            _requestResultState.value = PossibleRequestState.Idle
+            Log.d("WAHALA", "logOut: LOGOUT")
+            // Update Logout State to logged out
+            _logOutState.value = true
+        }catch (e: Exception){
+            Log.d("WAHALA", "logOut: {e}")
+            _requestResultState.value = PossibleRequestState.Failure(LOGOUT_ERROR + USER)
             e.printStackTrace()
         }
     }

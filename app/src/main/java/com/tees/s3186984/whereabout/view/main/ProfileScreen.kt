@@ -4,10 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import com.tees.s3186984.whereabout.model.User
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
@@ -16,19 +20,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.tees.s3186984.whereabout.componets.WLoadingBar
+import com.tees.s3186984.whereabout.componets.WSmallFAB
+import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
 import com.tees.s3186984.whereabout.viewmodel.ProfileViewModel
+import com.tees.s3186984.whereabout.wutils.LOGOUT
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
+import com.tees.s3186984.whereabout.wutils.SHARE_LOCATION_TITLE
 
 
 @Composable
-fun ProfileScreen(profileViewModel : ProfileViewModel) {
+fun ProfileScreen(profileViewModel : ProfileViewModel, navController: NavController) {
 
     val requestState = profileViewModel.requestResultState.collectAsState().value
+    val isLogOut = profileViewModel.logOutState.collectAsState().value
+
+    // Navigate to Auth screen upon Logout
+    if (isLogOut){
+        navController.navigate(Screens.LogIn.name) {
+            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
 
     when (requestState){
         is PossibleRequestState.ScreenLoading -> {
@@ -129,6 +149,42 @@ fun ProfileScreen(profileViewModel : ProfileViewModel) {
                     color = Color.Gray,
                     fontSize = 20.sp
                 )
+
+                Spacer(modifier = Modifier.height(120.dp))
+
+                // Sign Out Section
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .align(alignment = Alignment.CenterHorizontally)
+                        .clickable {
+
+                        }
+                        .padding(start = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+
+                    WSmallFAB(
+                        modifier = Modifier.padding(0.dp),
+                        fabColor = Color.Blue.copy(0.7f),
+                        contentColor = Color.White,
+                        scaleFactor = 0.75f,
+                        icon = Icons.AutoMirrored.Filled.Logout
+                    ) { profileViewModel.logOut() }
+
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp)
+                            .clickable{ profileViewModel.logOut()},
+                        color = Color.Blue.copy(0.7f),
+                        text = LOGOUT,
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
 
         }
@@ -139,8 +195,4 @@ fun ProfileScreen(profileViewModel : ProfileViewModel) {
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewUserProfile() {
-    ProfileScreen(ProfileViewModel(LocalContext.current))
-}
+

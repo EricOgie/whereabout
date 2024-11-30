@@ -1,6 +1,5 @@
 package com.tees.s3186984.whereabout.view.main
 
-
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BroadcastOnHome
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -31,9 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.tees.s3186984.whereabout.componets.ConfirmBottomSheet
 import com.tees.s3186984.whereabout.componets.GoogleMapView
 import com.tees.s3186984.whereabout.componets.LocationDetailsSheet
 import com.tees.s3186984.whereabout.componets.NotificationIconWithBadge
@@ -45,8 +45,9 @@ import com.tees.s3186984.whereabout.componets.WLargeFAB
 import com.tees.s3186984.whereabout.componets.WSmallFAB
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
-import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 import com.tees.s3186984.whereabout.viewmodel.HomeViewModel
+import com.tees.s3186984.whereabout.viewmodel.NotificationViewmodel
+import com.tees.s3186984.whereabout.wutils.CONFIRM
 import com.tees.s3186984.whereabout.wutils.CRASH_ERROR
 import com.tees.s3186984.whereabout.wutils.MapInteractivityState
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
@@ -56,12 +57,16 @@ import com.tees.s3186984.whereabout.wutils.PossibleRequestState
 fun HomeScreen(
     navController: NavController,
     homeViewModel: HomeViewModel,
+    notificationViewmodel: NotificationViewmodel
 ) {
 
     val sheetState = rememberModalBottomSheetState()
     var isSheetOpened by rememberSaveable { mutableStateOf(false) }
     val screenRequestState by homeViewModel.requestResultState.collectAsState()
     val mapInteractiveState by homeViewModel.mapInteractiveState.collectAsState()
+    val isBroadcasting by homeViewModel.isBroadCasting.collectAsState()
+    val notifications by notificationViewmodel.notifications.collectAsState()
+    val context = LocalContext.current
 
     if (screenRequestState is PossibleRequestState.Failure){
         val failureMessage = (screenRequestState as PossibleRequestState.Failure).message
@@ -105,7 +110,12 @@ fun HomeScreen(
                 handleShareButtonClick = {
                     // The share button is clicked, we want to mount the share bottom drawer sheet
                     homeViewModel.bottomModalDrawerSheetContent.value = {
-                        ShareLocationSheet(homeViewModel.pairedConnectionList)
+                        ShareLocationSheet(
+                            connections = homeViewModel.pairedConnectionList,
+                            handleShareLocation = { duration, bucketList ->
+                                homeViewModel.broadcastLocation(duration, bucketList)
+                            }
+                        )
                     }
 
                 }
@@ -113,7 +123,6 @@ fun HomeScreen(
         }
         isSheetOpened = true
     }
-
 
 
 
@@ -129,14 +138,22 @@ fun HomeScreen(
         )
         {
             // -------------- Embedded Google Map Background -------------//
-            // Note - The value of mapInteractiveState emitted by handleLocationPinClick of GoogleMapView
-            // floats from resolving (loading) to either a resolved-address-details (aka mapData) or an
-            // address error with a message.
-            //
+
             GoogleMapView(
                 modifier = Modifier.fillMaxSize(),
+
                 handleLocationPinClick = { mapInteractiveState ->
+                    // mapInteractiveState emitted here floats from resolving (loading) to either a
+                    // resolved-address-details (aka mapData) or an address error with a message.
                     homeViewModel.updateMapInteractivityState(mapInteractiveState)
+                },
+
+                // When the user change location and the distance changed is up to 10Meters
+                // this callback will be triggered with user new location as LatLng object.
+                // The application keeps tabs on the user's current location by saving/updating this value
+                // in firebase firestore
+                handleOnLocationUpdate = { newLocation ->
+                    homeViewModel.saveOrUpdateUserLocation(newLocation)
                 }
             )
 
@@ -153,9 +170,46 @@ fun HomeScreen(
                 NotificationIconWithBadge(
                     modifier = Modifier
                         .padding(30.dp),
-                    messageCount = 4,
-                ){}
+                    messageCount = notifications.size,
+                    handleClick = {
+                        Toast.makeText(context, "You have ${notifications.size} notifications", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
+
+            // The below ui component will be visible when the current user
+            // is sharing his/her location with paired connections
+            if (isBroadcasting){
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .align(alignment = Alignment.TopStart),
+                    horizontalAlignment = Alignment.Start
+                )
+                {
+                    WSmallFAB(
+                        fabColor = Color.Red.copy(0.8f),
+                        contentColor = Color.White,
+                        icon = Icons.Filled.BroadcastOnHome,
+                        handleClick = {
+                            homeViewModel.bottomModalDrawerSheetContent.value = {
+                                // Mount confirm bottom sheet and ask user to confirm
+                                // if they want to stop sharing their location
+                                ConfirmBottomSheet(
+                                    requestState = homeViewModel.requestResultState,
+                                    itemId = "", // ID Not necessary for this action
+                                    confirmPromptMessage = "$CONFIRM Stop location Sharing?",
+                                    handleCancel = { isSheetOpened = false },
+                                    handleConfirmAction = {
+                                        homeViewModel.stopLocationBroadCast()
+                                    }
+
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+
 
 
             // ----------- Side Feature Pane ------------------//
@@ -176,7 +230,15 @@ fun HomeScreen(
                     icon = Icons.Filled.Share
                 ) {
                     homeViewModel.bottomModalDrawerSheetContent.value = {
-                        ShareLocationSheet(homeViewModel.pairedConnectionList)
+                        ShareLocationSheet(
+                            connections = homeViewModel.pairedConnectionList,
+                            handleShareLocation = { duration, bucketList ->
+                                homeViewModel.broadcastLocation(
+                                    broadcastDuration = duration,
+                                    userBucketList = bucketList
+                                )
+                            }
+                        )
                     }
                     isSheetOpened = true
                 }
@@ -219,7 +281,20 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(30.dp))
 
                 // ---------------- SOS Floating Action Bar -------- //
-                WLargeFAB{ Log.d("HOME-SCREEN", "QRCODE: yes") }
+                WLargeFAB{
+                    homeViewModel.bottomModalDrawerSheetContent.value = {
+                        ShareLocationSheet(
+                            connections = homeViewModel.pairedConnectionList,
+                            handleShareLocation = { duration, bucketList ->
+                                homeViewModel.broadcastLocation(
+                                    broadcastDuration = duration,
+                                    userBucketList = bucketList
+                                )
+                            }
+                        )
+                    }
+                    isSheetOpened = true
+                }
 
                 Spacer(modifier = Modifier.height(30.dp))
 
@@ -269,18 +344,6 @@ fun HomeScreen(
 
     } // - End of Parent Container
 
-
-
 } // - End of Composable Screen
 
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun HomePreview() {
-    WhereaboutTheme {
-//        HomeScreen(navController = rememberNavController())
-    }
-}
 

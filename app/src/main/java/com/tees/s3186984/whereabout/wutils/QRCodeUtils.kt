@@ -51,32 +51,5 @@ class QRCodeUtils(){
 
         }
 
-        /**
-         * Decodes a Bitmap containing a QR code into a String.
-         *
-         * @param bitmap The Bitmap containing the QR code to decode.
-         * @return The decoded text from the QR code, or null if decoding fails.
-         */
-        fun decodeQRBitMap(bitmap: Bitmap): String? {
-            val reader = QRCodeReader()
-            val intArray = IntArray(bitmap.width * bitmap.height)
-            bitmap.getPixels(intArray, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            val source = RGBLuminanceSource(bitmap.width, bitmap.height, intArray)
-            val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
-
-            return try {
-                val result = reader.decode(binaryBitmap)
-                result.text
-
-            }catch(e: Exception){
-                Log.d("QR Code Reader Error", "Error: ${e.message}")
-                return null
-            }
-        }
-
-
-
-
-
     }
 }

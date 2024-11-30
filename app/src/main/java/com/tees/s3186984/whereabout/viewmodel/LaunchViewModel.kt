@@ -10,6 +10,7 @@ import com.tees.s3186984.whereabout.wutils.ONBOARDING_COMPLETE_KEY
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.os.CountDownTimer
+import android.util.Log
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 
 
@@ -59,7 +60,6 @@ class LaunchViewModel(context: Context) : ViewModel() {
         try {
             val isOnboardingComplete = preferenceRepo.getBooleanPreference(ONBOARDING_COMPLETE_KEY)
             val currentUser = firebaseRepo.getCurrentUser()
-
 
             navigationDestination = when {
                 !isOnboardingComplete -> Screens.Onboarding.name

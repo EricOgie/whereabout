@@ -1,6 +1,7 @@
 package com.tees.s3186984.whereabout.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,10 +9,13 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.tees.s3186984.whereabout.core.DeviceManager
 import com.tees.s3186984.whereabout.model.Connection
 import com.tees.s3186984.whereabout.model.ConnectionRequest
+import com.tees.s3186984.whereabout.model.Location
+import com.tees.s3186984.whereabout.model.ShareLocationBucket
 import com.tees.s3186984.whereabout.model.User
 import com.tees.s3186984.whereabout.repository.FireStoreRepository
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
@@ -22,9 +26,14 @@ import com.tees.s3186984.whereabout.wutils.PossibleRequestState
 import com.tees.s3186984.whereabout.wutils.QRCODE_ERROR
 import com.tees.s3186984.whereabout.wutils.QRCodeUtils
 import com.tees.s3186984.whereabout.wutils.CREATE_ERROR
+import com.tees.s3186984.whereabout.wutils.DEFAULT_ERROR_MSG
+import com.tees.s3186984.whereabout.wutils.FCM_TOKEN_KEY
+import com.tees.s3186984.whereabout.wutils.LOCATION
 import com.tees.s3186984.whereabout.wutils.MapInteractivityState
 import com.tees.s3186984.whereabout.wutils.OWNERID
+import com.tees.s3186984.whereabout.wutils.SHARE_LOCATION_BUCKET
 import com.tees.s3186984.whereabout.wutils.USER
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -45,6 +54,9 @@ class HomeViewModel(context: Context): ViewModel() {
     var currentUser: User? = null
         private set
 
+    var firebaseCloudMessageToken : String? = null
+        private set
+
     // Mutable state for controlling the bottom modal drawer content
     val bottomModalDrawerSheetContent = mutableStateOf<@Composable () -> Unit>({})
 
@@ -60,16 +72,18 @@ class HomeViewModel(context: Context): ViewModel() {
     private  val _mapInteractiveState = MutableStateFlow<MapInteractivityState>(
         MapInteractivityState.Idle
     )
-    val mapInteractiveState: StateFlow<MapInteractivityState>
-        get() = _mapInteractiveState
+    val mapInteractiveState: StateFlow<MapInteractivityState> get() = _mapInteractiveState
 
     // State to hold the list of paired connections
     private val _pairedConnectionList = mutableStateListOf<Connection>()
     val pairedConnectionList: SnapshotStateList<Connection> get() = _pairedConnectionList
 
+    private val _isBroadcasting = MutableStateFlow(false)
+    val isBroadCasting : StateFlow<Boolean> get() = _isBroadcasting
+
 
     /*
-    * Initialization block to fetch the current user and generate the QR code
+    * Initialization block to fetch the current user, paired connections and generate pairing QR code
     */
     init {
         viewModelScope.launch {
@@ -84,14 +98,13 @@ class HomeViewModel(context: Context): ViewModel() {
      * Generates a QR code based on the current user and device's data
      */
     private fun generateQRCode() {
-        viewModelScope.launch{
-            val connectionRequestData = DeviceManager.makeConnectionRequestData(
-                currentUser?.userId!!,
-                currentUser?.name?: "",
-                currentUser?.device?.deviceId!!
-            )
-            _qRCodeState.value = QRCodeUtils.generateQRCode(connectionRequestData)
-        }
+        val connectionRequestData = DeviceManager.makeConnectionRequestData(
+            currentUser?.userId!!,
+            currentUser?.name?: "",
+            currentUser?.device?.deviceId!!,
+            firebaseCloudMessageToken!!
+        )
+        _qRCodeState.value = QRCodeUtils.generateQRCode(connectionRequestData)
     }
 
     /*
@@ -100,6 +113,10 @@ class HomeViewModel(context: Context): ViewModel() {
     private suspend fun fetchCurrentUser() {
         _requestResultState.value = PossibleRequestState.ScreenLoading
         try {
+            // Retrieve device FCM TOKEN
+            firebaseCloudMessageToken = localStoreRepo.getStringPreference(FCM_TOKEN_KEY)
+            if (firebaseCloudMessageToken.isNullOrBlank()) throw IllegalStateException(CRASH_ERROR)
+
             val currentUserId = firebaseRepo.getCurrentUser()?.uid ?: throw IllegalStateException(CRASH_ERROR)
             currentUser = fireStoreRepo.getSingleDocument<User>("user", currentUserId)
 
@@ -146,7 +163,8 @@ class HomeViewModel(context: Context): ViewModel() {
                     // We would use this device Id to create the current user Device
 
                     val currentUserDevice = DeviceManager.makeDevice(
-                        deviceId = localStoreRepo.getStringPreference(currentUser?.userId!!)
+                        deviceId = localStoreRepo.getStringPreference(currentUser?.userId!!),
+                        fcmToken = firebaseCloudMessageToken!!
                     )
 
                     // Generate connection for initiator
@@ -216,6 +234,83 @@ class HomeViewModel(context: Context): ViewModel() {
 
     }
 
+    fun broadcastLocation(broadcastDuration: Int, userBucketList: List<String>) {
+
+        _requestResultState.value = PossibleRequestState.ComponentLoading
+
+        val broadcastDuration = System.currentTimeMillis() + (broadcastDuration * 60 * 60 * 1000)
+        // Create a shareLocationBucket object
+        val shareLocationBucket = ShareLocationBucket(
+            bucketId = UUID.randomUUID().toString(),
+            ownerId = currentUser!!.userId,
+            users = userBucketList,
+            expireAt = broadcastDuration
+        )
+
+        viewModelScope.launch{
+            try {
+                fireStoreRepo.createOrUpdateSingleDocument(
+                    collectionName = SHARE_LOCATION_BUCKET,
+                    documentData = shareLocationBucket,
+                    documentId = currentUser!!.userId
+                )
+                _isBroadcasting.value = true;
+                _requestResultState.value = PossibleRequestState.Success
+            }catch (e: Exception){
+                _requestResultState.value = PossibleRequestState.Failure("Broadcast Attempt failed")
+                Log.d("GRAGRAGRA", "broadcastLocation: ${e.message}")
+                e.printStackTrace()
+            } finally {
+                delay(2000)
+                _requestResultState.value = PossibleRequestState.Idle
+            }
+        }
+    }
+
+    fun stopLocationBroadCast(){
+        _requestResultState.value = PossibleRequestState.ComponentLoading
+        viewModelScope.launch{
+            try {
+                fireStoreRepo.deleteDocument(SHARE_LOCATION_BUCKET, currentUser!!.userId)
+                _requestResultState.value = PossibleRequestState.Success
+                _isBroadcasting.value = false
+            }catch (e: Exception){
+                e.printStackTrace()
+                _requestResultState.value = PossibleRequestState.Failure(DEFAULT_ERROR_MSG)
+            }finally {
+                delay(2000)
+                // Reset PossibleRequestState to idle after 2sec
+                _requestResultState.value = PossibleRequestState.Idle
+            }
+        }
+
+    }
+
+
+    fun saveOrUpdateUserLocation(latLng: LatLng) {
+        // Create a location object
+        val userLocation = Location(
+            id = UUID.randomUUID().toString(),
+            latitude = latLng.latitude,
+            longitude = latLng.longitude,
+            createdAt = System.currentTimeMillis()
+        )
+
+        // Make a network request to firestore database to persist user location
+        viewModelScope.launch {
+            try {
+                var result = fireStoreRepo.createOrUpdateSingleDocument(
+                    collectionName = LOCATION,
+                    documentData = userLocation,
+                    documentId = currentUser!!.userId
+                )
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+        }
+    }
+
+
     /*
      * Resets the request result state to idle
      */
@@ -230,6 +325,5 @@ class HomeViewModel(context: Context): ViewModel() {
     fun updateMapInteractivityState(
         interactivityState: MapInteractivityState
     ){ _mapInteractiveState.value = interactivityState }
-
 
 }

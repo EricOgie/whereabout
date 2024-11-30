@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewModelScope
@@ -20,6 +19,8 @@ import com.tees.s3186984.whereabout.wutils.CONNECTION
 import com.tees.s3186984.whereabout.wutils.GENERIC_ERR_MSG
 import com.tees.s3186984.whereabout.wutils.OWNERID
 import com.tees.s3186984.whereabout.wutils.USER
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
@@ -38,13 +39,13 @@ class PairedConnectionViewModel(context: Context): ViewModel(){
     val pairedConnectionList: SnapshotStateList<Connection> get() = _pairedConnectionList
 
     // State to manage the network request state (idle, loading, success, failure)
-    private val _networkRequestState = mutableStateOf<PossibleRequestState<Connection>>(PossibleRequestState.Idle)
-    val networkRequestState: State<PossibleRequestState<Connection>> get() = _networkRequestState
+    private val _networkRequestState = MutableStateFlow<PossibleRequestState<Connection>>(PossibleRequestState.Idle)
+    val networkRequestState: StateFlow<PossibleRequestState<Connection>> get() = _networkRequestState
 
     var currentUser: User? = null
         private set
 
-    // Initialize the ViewModel by fetching the cached user and paired connections
+    // Fetch cached user profile and paired connections upon Viewmodel Initialization
     init {
         viewModelScope.launch{
             getCachedUser()

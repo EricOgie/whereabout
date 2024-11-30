@@ -1,6 +1,7 @@
 package com.tees.s3186984.whereabout.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,7 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.tees.s3186984.whereabout.model.RegistrationFormData
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 import com.tees.s3186984.whereabout.repository.LocalStoreRepository
+import com.tees.s3186984.whereabout.wutils.FCM_TOKEN_KEY
 import com.tees.s3186984.whereabout.wutils.Helpers
+import kotlinx.coroutines.launch
 
 class SignUpViewModel(context: Context) : ViewModel() {
 
@@ -78,11 +81,23 @@ class SignUpViewModel(context: Context) : ViewModel() {
             recoveryAnswer = answerState.value
         )
 
-        loadingState .value = true
-        authRepo.signUp(formData = userData){ success, message ->
-            _result.value = Pair(success, message)
-            sinUpRequestMessage.value = message ?: ""
-            loadingState .value = false
+        viewModelScope.launch{
+            try {
+
+                var firebaseMessageToken = localStoreRepo.getStringPreference(FCM_TOKEN_KEY)
+                if (firebaseMessageToken.isNullOrBlank()) firebaseMessageToken = ""
+
+                loadingState .value = true
+                authRepo.signUp(formData = userData, fcm = firebaseMessageToken){ success, message ->
+                    _result.value = Pair(success, message)
+                    sinUpRequestMessage.value = message ?: ""
+                    loadingState .value = false
+                }
+
+            }catch ( e: Exception){
+                e.printStackTrace()
+            }
+
         }
 
     }

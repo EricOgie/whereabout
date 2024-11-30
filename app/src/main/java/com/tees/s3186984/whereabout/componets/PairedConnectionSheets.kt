@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tees.s3186984.whereabout.ui.theme.WBlack75
-import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.alpha
@@ -37,27 +37,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tees.s3186984.whereabout.model.Connection
 import com.tees.s3186984.whereabout.ui.theme.WBlue5
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
+import com.tees.s3186984.whereabout.wutils.AFFIRM
 import com.tees.s3186984.whereabout.wutils.CANCEL
-import com.tees.s3186984.whereabout.wutils.CONFIRM
 import com.tees.s3186984.whereabout.wutils.CONNECTION_TAG_NUDGE
 import com.tees.s3186984.whereabout.wutils.CON_DETAILS
-import com.tees.s3186984.whereabout.wutils.DELETE
 import com.tees.s3186984.whereabout.wutils.DEVICES
 import com.tees.s3186984.whereabout.wutils.EDIT_CON_TAG
 import com.tees.s3186984.whereabout.wutils.EXAMPLE_TAG
 import com.tees.s3186984.whereabout.wutils.EXTRA_INFO
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
 import com.tees.s3186984.whereabout.wutils.SAVE
+import kotlinx.coroutines.flow.StateFlow
 
-
+/**
+ * A Composable function that displays a detailed sheet about a specific connection,
+ * allowing users to view connection details and edit the connection's tag.
+ *
+ * @param requestState A [StateFlow] representing the current state of the request to update
+ *                     the connection's tag. Used to display error messages or a loading indicator
+ *                     when the request is in progress.
+ * @param connection A [Connection] object containing the details of the connection to be displayed.
+ *                   This includes information such as the connected user's name, device name, and model.
+ * @param submitEditTag A lambda function invoked when the user submits an edited tag.
+ *                      It receives the connection ID and the new tag value as arguments.
+ */
 @Composable
 fun ConnectionDetailSheet(
-    requestState:State<PossibleRequestState<Connection>>,
+    requestState:StateFlow<PossibleRequestState<Connection>>,
     connection: Connection,
     submitEditTag: (String, String) -> Unit,
 )
 {
-    val requestState by requestState
+    val requestState by requestState.collectAsState()
     var inputTextState = remember { mutableStateOf(connection.tag) }
 
     Column(
@@ -214,15 +225,32 @@ fun ConnectionDetailSheet(
 }
 
 
+
+/**
+ * A Composable function that displays a confirmation bottom sheet with a prompt message,
+ * a cancel button, and a confirm action button. This component is designed to prompt the user
+ * for confirmation before executing a critical action like Delete.
+ *
+ * @param requestState A [StateFlow] representing the current state of the confirmation request.
+ *                     The state is used to determine if the confirm button should display a
+ *                     loading indicator.
+ * @param itemId The identifier of the item associated with the confirm action. This is passed
+ *               to the confirm action handler when the user confirms.
+ * @param confirmPromptMessage A message displayed to the user prompting them to confirm the action.
+ * @param handleConfirmAction A lambda function triggered when the user clicks the confirm button.
+ *                            It receives the [itemId] as an argument.
+ * @param handleCancel A lambda function triggered when the user clicks the cancel button.
+ */
 @Composable
-fun DeleteConnectionSheet(
-    requestState:State<PossibleRequestState<Connection>>,
-    connection: Connection,
-    handleDelete: (String) -> Unit,
+fun ConfirmBottomSheet(
+    requestState:StateFlow<PossibleRequestState<Any>>,
+    itemId: String,
+    confirmPromptMessage: String,
+    handleConfirmAction: (String) -> Unit,
     handleCancel: () -> Unit
 )
 {
-    val requestState by requestState
+    val requestState by requestState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -241,10 +269,10 @@ fun DeleteConnectionSheet(
         )
 
         Spacer(modifier = Modifier.height(40.dp))
-        val connectionIdentity = if (connection.tag.isNotEmpty()) connection.tag else connection.connectedUserFirstName
+
         Text(
             textAlign = TextAlign.Center,
-            text = "$CONFIRM delete $connectionIdentity",
+            text = confirmPromptMessage,
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.Red
@@ -269,14 +297,14 @@ fun DeleteConnectionSheet(
 
             Spacer(modifier = Modifier.width(30.dp))
 
-            // --- Delete Button -- //
+            // --- Confirm Action Button -- //
             if (requestState is PossibleRequestState.ComponentLoading){
                 WLoadingBar()
             }else {
-                TextButton(onClick = { handleDelete(connection.connectionId) })
+                TextButton(onClick = { handleConfirmAction(itemId) })
                 {
                     Text(
-                        text = DELETE,
+                        text = AFFIRM,
                         color = Color.Red,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.SemiBold
@@ -295,6 +323,6 @@ fun DeleteConnectionSheet(
 @Composable
 fun YoPreview() {
     WhereaboutTheme {
-
+        // For Mounting view component for preview
     }
 }

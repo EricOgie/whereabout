@@ -3,6 +3,7 @@ package com.tees.s3186984.whereabout.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 import com.tees.s3186984.whereabout.repository.LocalStoreRepository
 import com.tees.s3186984.whereabout.wutils.ONBOARDING_COMPLETE_KEY
 import kotlinx.coroutines.launch
@@ -21,7 +22,9 @@ class OnboardingViewModel(context: Context): ViewModel(){
 
     /**
      * Onboards the user by saving a boolean preference indicating that the
-     * onboarding process is complete. This is done asynchronously using
+     * onboarding process is complete and also saving firebase cloud message token for the device
+     *
+     * This is done asynchronously using
      * viewModelScope to ensure it doesn't block the main thread.
      */
     private fun onboardUser(){
@@ -30,4 +33,5 @@ class OnboardingViewModel(context: Context): ViewModel(){
         }
 
     }
+    
 }

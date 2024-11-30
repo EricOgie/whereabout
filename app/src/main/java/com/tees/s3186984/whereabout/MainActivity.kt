@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.ui.graphics.Color
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tees.s3186984.whereabout.navigation.App
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 
@@ -40,5 +38,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }
 

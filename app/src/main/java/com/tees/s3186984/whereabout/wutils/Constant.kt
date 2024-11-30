@@ -28,6 +28,7 @@ const val NAME_ERROR_MSG = "* Fullname must be 3 - 20 letters long"
 const val PHRASE_ERROR_MSG = "* question and answer must be 5 - 20 letters long"
 const val GENERIC_ERR_MSG = "Unknown Error"
 const val FETCHING_ERROR = "Error occurred while fetching "
+const val LOGOUT_ERROR = "Logout Error: "
 const val CAMERA_PERMISSION_ALERT = "Camera permission is required to scan QR codes."
 const val LOCATION_PERMISSION_ERROR = "Location permission not granted"
 
@@ -81,13 +82,14 @@ const val LOCAL_STORE  = "local_store"
 const val PAIRING_TITLE = "Pairing As"
 const val SAVE = "Save"
 const val CANCEL = "Cancel"
-const val DELETE = "Delete"
+const val AFFIRM = "Yes"
 const val CONNECTION_TITLE = "Paired Connections"
 const val EDIT_CON_TAG = "Add/Edit Connection Tag"
 const val EXTRA_INFO = "Extra Information"
 
 const val SHARE_LOCATION_TITLE = "Share your Location"
 const val PLACES_TITLE = "Nearby Places"
+const val LOGOUT = "Log me out"
 
 
 
@@ -103,11 +105,16 @@ const val NO_TAG = "No Tag Name"
 const val PASSWORD_SECURITY = "password_security"
 const val USER = "user"
 const val CONNECTION = "connections"
+const val LOCATION = "locations"
+const val SHARE_LOCATION_BUCKET = "shareLocationBuckets"
 const val OWNERID = "ownerId"
 
 
-const val ONBOARDING_COMPLETE_KEY = "onboarding_complete"
+const val ONBOARDING_COMPLETE_KEY = "onboarding_complete_key"
+const val FCM_TOKEN_KEY = "fck_token"
 const val FORGET_PASS = "Forget your password?"
 const val ALREADY_HAVE = "Already have an account?"
 const val DONT_HAVE_ACC = "Don't have an account?"
 
+// ------------------- NUMERIC CONSTANTS ------------------------------ //
+const val TEN: Int = 10

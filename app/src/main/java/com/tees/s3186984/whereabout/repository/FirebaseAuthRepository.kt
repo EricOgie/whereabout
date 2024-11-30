@@ -1,9 +1,11 @@
 package com.tees.s3186984.whereabout.repository
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.tees.s3186984.whereabout.core.DeviceManager
 import com.tees.s3186984.whereabout.model.PasswordRecovery
 import com.tees.s3186984.whereabout.model.RegistrationFormData
@@ -15,6 +17,7 @@ import com.tees.s3186984.whereabout.wutils.PASSWORD_SECURITY
 import com.tees.s3186984.whereabout.wutils.USER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthRepository(context: Context, private val scope: CoroutineScope) {
 
@@ -57,7 +60,7 @@ class FirebaseAuthRepository(context: Context, private val scope: CoroutineScope
      * @param handleResult A callback function that handles the result of the signup attempt,
      *                     receiving a success flag and an optional error message.
      */
-    fun signUp(formData: RegistrationFormData, handleResult: (Boolean, String?) -> Unit) {
+    fun signUp(formData: RegistrationFormData, fcm: String,  handleResult: (Boolean, String?) -> Unit) {
         auth.createUserWithEmailAndPassword(formData.email, formData.password)
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful){
@@ -73,9 +76,9 @@ class FirebaseAuthRepository(context: Context, private val scope: CoroutineScope
                         return@addOnCompleteListener
                     }
 
-                    // I will pass null to makeDevice so it can create a fresh deviceId since
+                    // we will pass null to makeDevice so it can create a fresh deviceId since
                     // the user is just setting up
-                    val userDevice = DeviceManager.makeDevice(deviceId=null)
+                    val userDevice = DeviceManager.makeDevice(deviceId=null, fcmToken = fcm)
                     val user = formData.makeUser(userId, userDevice)
                     val recoveryData = PasswordRecovery(
                         question = formData.recoveryQuestion,
@@ -120,6 +123,19 @@ class FirebaseAuthRepository(context: Context, private val scope: CoroutineScope
      */
     fun getCurrentUser() : FirebaseUser? {
         return auth.currentUser
+    }
+
+
+    // Function to get FCM token and return it
+    suspend fun getFcmToken(): String? {
+        return try {
+            // Fetch the FCM token
+            FirebaseMessaging.getInstance().token.await()
+        } catch (e: Exception) {
+            // Handle any errors if token fetching fails
+            e.printStackTrace()
+            null
+        }
     }
 
 

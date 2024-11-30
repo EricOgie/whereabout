@@ -24,11 +24,17 @@
         android:theme="@style/Theme.Whereabout"
         tools:targetApi="31">
 
+        <service
+            android:name=".core.FirebaseMsgService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
-<!--            android:value="AIzaSyAU70ekAJ787f9MU3D3Ly6NyomBMixo1zg" />-->
-
 
 
         <activity

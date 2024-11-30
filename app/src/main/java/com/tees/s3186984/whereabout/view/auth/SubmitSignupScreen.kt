@@ -50,6 +50,8 @@ fun SubmitSignUpScreen(navController: NavController, signUpVM : SignUpViewModel)
                 .padding(horizontal = 15.dp, vertical = 15.dp)
                 .fillMaxSize()
         ) {
+            Spacer(modifier = Modifier.height(50.dp))
+
             WBackButton { navController.navigate(Screens.SignUp.name) }
 
             Spacer(modifier = Modifier.height(70.dp))

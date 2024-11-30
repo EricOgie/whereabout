@@ -1,6 +1,7 @@
 package com.tees.s3186984.whereabout.repository
 
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -76,7 +77,7 @@ class FireStoreRepository {
      * @param documentData The data of the document to save.
      * @return True if the operation is successful, false otherwise.
      */
-    suspend inline fun <reified T : Any> saveSingleDocument(
+    suspend inline fun <reified T : Any> createOrUpdateSingleDocument(
         collectionName: String,
         documentData: T,
         documentId: String
@@ -89,8 +90,7 @@ class FireStoreRepository {
                 .await()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            throw Exception(e.message)
         }
     }
 
@@ -158,17 +158,17 @@ class FireStoreRepository {
      * Deletes a document from a Firestore collection.
      *
      * @param collectionName The name of the Firestore collection.
-     * @param documentName The name (ID) of the document to delete.
+     * @param documentID The name (ID) of the document to delete.
      * @return True if the operation is successful, false otherwise.
      */
     suspend fun deleteDocument(
         collectionName: String,
-        documentName: String
+        documentID: String
     ): Boolean{
 
         return try {
             // Reference to the document to be deleted
-            val documentReference = firestore.collection(collectionName).document(documentName)
+            val documentReference = firestore.collection(collectionName).document(documentID)
             // Delete the document
             documentReference.delete().await()
             true

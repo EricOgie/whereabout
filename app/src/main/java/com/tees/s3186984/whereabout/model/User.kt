@@ -48,7 +48,7 @@ data class RegistrationFormData(
     val email: String,
     val password: String,
     val recoveryQuestion: String,
-    val recoveryAnswer: String
+    val recoveryAnswer: String,
 ){
     fun makeUser(id: String, userDevice: Device) : User {
         return User(
@@ -79,6 +79,7 @@ data class Device(
     val model: String = "",
     val brand: String = "",
     val deviceName: String = "",
+    val fcmToken: String = ""
 )
 
 

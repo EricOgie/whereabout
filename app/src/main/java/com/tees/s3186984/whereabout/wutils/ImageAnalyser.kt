@@ -65,7 +65,6 @@ class ImageAnalyser(private  val onQRCodeScan: (String) -> Unit): ImageAnalysis.
                 if (scanCount >= 2 ) onQRCodeScan(result.text)
 
             }catch (e: Exception){
-                Log.d("DECODING ERROR", "analyze: ${e.message}")
                 e.printStackTrace()
             } finally {
                 image.close()
