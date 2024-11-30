@@ -1,28 +1,20 @@
 package com.tees.s3186984.whereabout.view.main
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import com.tees.s3186984.whereabout.model.User
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,16 +22,14 @@ import androidx.compose.ui.unit.sp
 import com.tees.s3186984.whereabout.componets.WLoadingBar
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
 import com.tees.s3186984.whereabout.viewmodel.ProfileViewModel
-import com.tees.s3186984.whereabout.wutils.PROFILE_IMAGE_PLACEHOLDER
 import com.tees.s3186984.whereabout.wutils.PossibleRequestState
-import java.net.HttpURLConnection
-import java.net.URL
 
 
 @Composable
 fun ProfileScreen(profileViewModel : ProfileViewModel) {
 
     val requestState = profileViewModel.requestResultState.collectAsState().value
+
     when (requestState){
         is PossibleRequestState.ScreenLoading -> {
             Column(
@@ -145,8 +135,6 @@ fun ProfileScreen(profileViewModel : ProfileViewModel) {
 
         else -> {}
     }
-
-
 
 
 }

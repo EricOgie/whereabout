@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import com.google.zxing.BinaryBitmap
 import android.graphics.Color
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.WriterException
@@ -28,7 +30,7 @@ class QRCodeUtils(){
          * @param height The height of the generated QR code bitmap. Default is 250 pixels.
          * @return A Bitmap representing the QR code, or null if an error occurs.
          */
-        fun generateQRCode(data: String, width: Int = 250, height: Int = 250): Bitmap? {
+        fun generateQRCode(data: String, width: Int = 250, height: Int = 250): ImageBitmap? {
             return try {
                 val writer = QRCodeWriter()
                 val bitMapMatrix = writer.encode(data, BarcodeFormat.QR_CODE, width, height)
@@ -40,7 +42,7 @@ class QRCodeUtils(){
                     }
                 }
 
-                bitmap
+                bitmap.asImageBitmap()
 
             }catch (e: WriterException){
                 Log.d("QR Code generate Error", "Error: ${e.message}")

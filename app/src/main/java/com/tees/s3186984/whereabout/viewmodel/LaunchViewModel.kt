@@ -6,13 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.repository.LocalStoreRepository
-import com.tees.s3186984.whereabout.wutils.AUTH_TOKEN_KEY
 import com.tees.s3186984.whereabout.wutils.ONBOARDING_COMPLETE_KEY
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
-import android.util.Log.d
 import android.os.CountDownTimer
-
+import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 
 
 class LaunchViewModel(context: Context) : ViewModel() {
@@ -21,6 +19,8 @@ class LaunchViewModel(context: Context) : ViewModel() {
 
     // Repository for accessing datastore ( a replacement for shared preferences )
     private val preferenceRepo = LocalStoreRepository(context = context)
+
+    private val firebaseRepo = FirebaseAuthRepository(context, viewModelScope)
 
     // Destination to navigate to after the countdown and checks
     lateinit var navigationDestination: String
@@ -58,21 +58,22 @@ class LaunchViewModel(context: Context) : ViewModel() {
 
         try {
             val isOnboardingComplete = preferenceRepo.getBooleanPreference(ONBOARDING_COMPLETE_KEY)
-            val authToken = preferenceRepo.getStringPreference(AUTH_TOKEN_KEY)
+            val currentUser = firebaseRepo.getCurrentUser()
+
 
             navigationDestination = when {
                 !isOnboardingComplete -> Screens.Onboarding.name
-                authToken.isNullOrEmpty() -> Screens.LogIn.name
+                currentUser == null -> Screens.LogIn.name
                 else -> Screens.Home.name
             }
 
         }catch (e: Exception){
-            /** TODO for ERIC : navigationDestination should be set to error screen HERE*/
-            navigationDestination = Screens.SubmitSignUp.name // temp
+            navigationDestination = Screens.Error.name
 
         } finally {
+            // Set isReadyToNavigate to true
             isReadyToNavigate.value = true
-            d("FINAL", "IS READY: ${isReadyToNavigate.value}")
+
         }
 
     }
@@ -97,8 +98,5 @@ class LaunchViewModel(context: Context) : ViewModel() {
         }
         timer.start()
     }
-
-
-
 
 }
