@@ -5,8 +5,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import com.tees.s3186984.whereabout.ui.theme.WMeRed
-const val PROFILE_IMAGE_PLACEHOLDER = "https://upload.wikimedia.org/wikipedia/commons/7/7c/" +
-        "Profile_avatar_placeholder_large.png"
+
 const val SIGNUP_GREETING = "Let's get you started real quick. We only need a few information"
 
 const val SIGNUP_NUDGE = "One more step and you are done"
@@ -18,6 +17,10 @@ const val ONBOARDING_MSG = "Stay safe and connected with real-time location trac
         " exploring or in an emergency, we're here to help. Let’s get started!"
 
 const val DEFAULT_ERROR_MSG = "Something went wrong"
+const val QRCODE_ERROR = "Sorry! wrong or malformed QR Code"
+const val CREATE_ERROR = "Error while creating "
+const val CRASH_ERROR = "Unable to fetch user. Please restart the Whereabout and try again."
+const val ADDRESS_RESOLUTION_ERROR = "Error while resolving address"
 
 const val EMAIL_ERROR_MSG = "* Email must be a valid email address"
 const val PASSWORD_ERROR_MSG =  "* Password must 8 or more characters and contain special char"
@@ -26,11 +29,15 @@ const val PHRASE_ERROR_MSG = "* question and answer must be 5 - 20 letters long"
 const val GENERIC_ERR_MSG = "Unknown Error"
 const val FETCHING_ERROR = "Error occurred while fetching "
 const val CAMERA_PERMISSION_ALERT = "Camera permission is required to scan QR codes."
+const val LOCATION_PERMISSION_ERROR = "Location permission not granted"
 
 const val CONNECTION_TAG_NUDGE = "Connection tags are easy ways to identify your connections"
 const val EXAMPLE_TAG = "Example: Mom's Phone"
 
 const val CONFIRM = "Are you sure you want to"
+
+const val GOOGLE_API_KEY = "com.google.android.geo.API_KEY"
+
 
 
 
@@ -78,8 +85,17 @@ const val DELETE = "Delete"
 const val CONNECTION_TITLE = "Paired Connections"
 const val EDIT_CON_TAG = "Add/Edit Connection Tag"
 const val EXTRA_INFO = "Extra Information"
+
+const val SHARE_LOCATION_TITLE = "Share your Location"
+const val PLACES_TITLE = "Nearby Places"
+
+
+
 const val DEVICES = "Paired Devices"
 const val CON_DETAILS = "Connection Details"
+const val PAIRING_REVIEW_TITLE = "Pairing Preview"
+const val CONNECT_INFO_TITLE = "Connection Information"
+
 
 const val NO_TAG = "No Tag Name"
 
@@ -91,11 +107,7 @@ const val OWNERID = "ownerId"
 
 
 const val ONBOARDING_COMPLETE_KEY = "onboarding_complete"
-const val AUTH_TOKEN_KEY = "auth_token"
 const val FORGET_PASS = "Forget your password?"
 const val ALREADY_HAVE = "Already have an account?"
 const val DONT_HAVE_ACC = "Don't have an account?"
-
-
-const val SUCCESS = "Successful"
 

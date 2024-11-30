@@ -38,9 +38,6 @@ object DeviceManager {
         ))
     }
 
-    fun makeConnectionRequest(jsonData: String): ConnectionRequest {
-        return gson.fromJson(jsonData, ConnectionRequest::class.java)
-    }
 
 
     private fun generateDeviceUUID(): String {

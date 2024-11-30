@@ -10,7 +10,7 @@ enum class Screens {
     Splash,
     Onboarding,
     Profile,
-    History,
+    Error,
     Connection;
 
 
@@ -31,7 +31,7 @@ enum class Screens {
         }
 
         fun screenWithBottomNavBar(): List<String>{
-            return listOf(Home.name, Profile.name, Connection.name, History.name)
+            return listOf(Home.name, Profile.name, Connection.name)
         }
     }
 

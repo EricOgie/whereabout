@@ -1,14 +1,11 @@
 package com.tees.s3186984.whereabout.viewmodel
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.util.Log
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -20,183 +17,219 @@ import com.tees.s3186984.whereabout.repository.FireStoreRepository
 import com.tees.s3186984.whereabout.repository.FirebaseAuthRepository
 import com.tees.s3186984.whereabout.repository.LocalStoreRepository
 import com.tees.s3186984.whereabout.wutils.CONNECTION
+import com.tees.s3186984.whereabout.wutils.CRASH_ERROR
+import com.tees.s3186984.whereabout.wutils.PossibleRequestState
+import com.tees.s3186984.whereabout.wutils.QRCODE_ERROR
 import com.tees.s3186984.whereabout.wutils.QRCodeUtils
+import com.tees.s3186984.whereabout.wutils.CREATE_ERROR
+import com.tees.s3186984.whereabout.wutils.MapInteractivityState
+import com.tees.s3186984.whereabout.wutils.OWNERID
 import com.tees.s3186984.whereabout.wutils.USER
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.Pair
+import kotlin.String
 
 class HomeViewModel(context: Context): ViewModel() {
-
+    // Gson instance for JSON serialization and deserialization
     val gson = Gson()
+
+    // Repositories for handling Firebase authentication, Firestore, and local storage
     val firebaseRepo = FirebaseAuthRepository(context, viewModelScope)
     val fireStoreRepo = FireStoreRepository()
     val localStoreRepo = LocalStoreRepository(context)
-    val currentUserId = firebaseRepo.getCurrentUser()?.uid ?: "" // TODO- shutdown gracefully without ID
 
+    // Holds the current user data retrieved from Firestore
     var currentUser: User? = null
         private set
 
-    // Bottom Sheet Controls
-    val sheetContent = mutableStateOf<@Composable () -> Unit>({})
+    // Mutable state for controlling the bottom modal drawer content
+    val bottomModalDrawerSheetContent = mutableStateOf<@Composable () -> Unit>({})
 
-    // Device Pairing Observable data
-    var pairingRequestMessage =  mutableStateOf("")
-    var deviceTagState = mutableStateOf("")
-    var isLoading = mutableStateOf(false)
-    val qrCodeBitmap = mutableStateOf<Bitmap?>(null)
+    // StateFlow to manage the network request result status
+    private val _requestResultState = MutableStateFlow<PossibleRequestState<Any>>(
+        PossibleRequestState.Idle)
+    val requestResultState: StateFlow<PossibleRequestState<Any>> get() = _requestResultState
 
-    // Scan process Result Observables
-    private val _scannedResult = MutableStateFlow<String?>(null)
-    val scannedResult: StateFlow<String?> get() = _scannedResult
+    // StateFlow to hold the generated QR code as an ImageBitmap
+    private val _qRCodeState = MutableStateFlow<ImageBitmap?>(null)
+    val qRCodeState: StateFlow<ImageBitmap?> get() = _qRCodeState
 
-    // Saving Connection Result Observables
-    private val _connectionSaveStatus = MutableStateFlow<Result<Boolean>?>(null)
-    val connectionSaveStatus: StateFlow<Result<Boolean>?> = _connectionSaveStatus
+    private  val _mapInteractiveState = MutableStateFlow<MapInteractivityState>(
+        MapInteractivityState.Idle
+    )
+    val mapInteractiveState: StateFlow<MapInteractivityState>
+        get() = _mapInteractiveState
 
-
-    val connectionRequestState = mutableStateOf<Pair<Boolean, ConnectionRequest?>>(Pair(false, null))
-    val connectionErrorState = mutableStateOf(false)
-
-
-    private val _cameraPermissionGranted = MutableStateFlow(false)
-    val cameraPermissionGranted: StateFlow<Boolean> = _cameraPermissionGranted
-
+    // State to hold the list of paired connections
+    private val _pairedConnectionList = mutableStateListOf<Connection>()
+    val pairedConnectionList: SnapshotStateList<Connection> get() = _pairedConnectionList
 
 
     /*
-    * Initialise essentials needed for this class
+    * Initialization block to fetch the current user and generate the QR code
     */
     init {
-        // Fetch the current user from Firestore when ViewModel is initialized
         viewModelScope.launch {
             fetchCurrentUser()
             generateQRCode()
+            fetchPairedConnection()
         }
     }
 
 
-    // TODO - This function should update the UI with error message if any of
-    //  {currentUserId, currentUser.name, deviceId} is missing
-    fun generateQRCode() {
+    /*
+     * Generates a QR code based on the current user and device's data
+     */
+    private fun generateQRCode() {
         viewModelScope.launch{
             val connectionRequestData = DeviceManager.makeConnectionRequestData(
-                currentUserId,
+                currentUser?.userId!!,
                 currentUser?.name?: "",
                 currentUser?.device?.deviceId!!
             )
-            qrCodeBitmap.value = QRCodeUtils.generateQRCode(connectionRequestData)
+            _qRCodeState.value = QRCodeUtils.generateQRCode(connectionRequestData)
         }
     }
 
-
+    /*
+     * Fetches the current user data from Firestore and caches it in local storage
+     */
     private suspend fun fetchCurrentUser() {
-        isLoading.value = true
+        _requestResultState.value = PossibleRequestState.ScreenLoading
         try {
-            val currentUserId = firebaseRepo.getCurrentUser()?.uid ?: return
+            val currentUserId = firebaseRepo.getCurrentUser()?.uid ?: throw IllegalStateException(CRASH_ERROR)
             currentUser = fireStoreRepo.getSingleDocument<User>("user", currentUserId)
 
             // Cache user details in local store
             val userJsonString = gson.toJson(currentUser)
             localStoreRepo.saveStringPreference(USER, userJsonString)
+            resetRequestResultState()
 
         } catch (e: Exception) {
-            Log.d("HomeViewModel", "Error fetching current user: ${e.message}")
-        }finally {
-            isLoading.value = false
-            Log.d("LOADED_DATA", "user: ${currentUser}")
+            _requestResultState.value = PossibleRequestState.Failure(e.message!!)
+            e.printStackTrace()
         }
     }
 
-    fun createPairingConnection() {
+
+    private suspend fun fetchPairedConnection() {
+        try {
+            val userPairedConn = fireStoreRepo.getDocuments<Connection>(
+                CONNECTION, Pair(OWNERID, currentUser?.userId!!)
+            )
+            _pairedConnectionList.addAll(userPairedConn)
+
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
+    }
+
+
+    /*
+     * Creates paired connections for both users involved in the pairing process
+     */
+    fun createPairedConnection(connectionTag: String) {
         viewModelScope.launch{
             try {
                 val currentUserFirstName = currentUser?.name?.split(" ")?.firstOrNull() ?: ""
-                val (_, connection) = connectionRequestState.value
+                // As at this point of this call, requestResultState should be PossibleRequestState.SuccessWithData
+                // and the contained data should be a ConnectionRequest
+                if (requestResultState.value is PossibleRequestState.SuccessWithData){
+                    val connectionRequest = (requestResultState.value
+                            as PossibleRequestState.SuccessWithData<*>).data
+                            as ConnectionRequest
 
-                // User device ID is saved to local store (using userID as key) on first time use of the App.
-                // We would use this device Id to create the current user Device
+                    // User device ID is saved to local store (using userID as key) on first time use of the App.
+                    // We would use this device Id to create the current user Device
 
-                val currentUserDevice = DeviceManager.makeDevice(
-                    deviceId = localStoreRepo.getStringPreference(currentUserId)
-                )
+                    val currentUserDevice = DeviceManager.makeDevice(
+                        deviceId = localStoreRepo.getStringPreference(currentUser?.userId!!)
+                    )
 
-                // Generate connection for initiator
-                val initiatorConnection = Connection(
-                    connectionId = UUID.randomUUID().toString(),
-                    ownerId = connection?.initiatorId!!,
-                    connectedUserId = currentUserId, connectedUserFirstName = currentUserFirstName,
-                    connectedUserDevice = currentUserDevice
-                )
+                    // Generate connection for initiator
+                    val initiatorConnection = Connection(
+                        connectionId = UUID.randomUUID().toString(),
+                        ownerId = connectionRequest.initiatorId,
+                        connectedUserId = currentUser?.userId!!,
+                        connectedUserFirstName = currentUserFirstName,
+                        connectedUserDevice = currentUserDevice
+                    )
 
-                // Generate connection for currentUser
-                val currentUserConnection = Connection(
-                    connectionId = UUID.randomUUID().toString(), ownerId = currentUserId,
-                    connectedUserId = connection.initiatorId, connectedUserFirstName = connection.initiatorFirstName,
-                    connectedUserDevice = connection.initiatorDevice, tag = deviceTagState.value
-                )
+                    // Generate connection for currentUser
+                    val currentUserConnection = Connection(
+                        connectionId = UUID.randomUUID().toString(),
+                        ownerId = currentUser?.userId!!,
+                        connectedUserId = connectionRequest.initiatorId,
+                        connectedUserFirstName = connectionRequest.initiatorFirstName,
+                        connectedUserDevice = connectionRequest.initiatorDevice,
+                        tag = connectionTag
+                    )
 
-                // Prepare a list of document ID to data pairs for batch saving to Firestore.
-                // Each pair consists of a unique connectionId (used as the document ID)
-                // and its corresponding connection data object.
-                val ownerAndRecipientConnections = listOf(
-                    initiatorConnection.connectionId to initiatorConnection,
-                    currentUserConnection.connectionId to currentUserConnection
-                )
+                    // Prepare a list of document ID to data pairs for batch saving to Firestore.
+                    // Each pair consists of a unique connectionId (used as the document ID)
+                    // and its corresponding connection data object.
+                    val ownerAndRecipientConnections = listOf(
+                        initiatorConnection.connectionId to initiatorConnection,
+                        currentUserConnection.connectionId to currentUserConnection
+                    )
 
-                // Save connection Firestore
-                val saveResult  = fireStoreRepo.saveMultipleDocuments(CONNECTION, ownerAndRecipientConnections)
+                    // We will now make request to firestore to save these connections
+                        // First we will update _requestResultState to component loading
+                    _requestResultState.value = PossibleRequestState.ComponentLoading
+                    // Save connection Firestore
+                    val saveResult  = fireStoreRepo.saveMultipleDocuments(CONNECTION, ownerAndRecipientConnections)
 
-                if (saveResult){
-                    _connectionSaveStatus.value = Result.success(true)
-                }else {
-                    _connectionSaveStatus.value = Result.failure(Exception("Failed to save connections"))
+                    if (saveResult){
+                        _requestResultState.value = PossibleRequestState.Success
+                    }else {
+                        _requestResultState.value = PossibleRequestState.Failure(CREATE_ERROR + CONNECTION)
+                    }
+
                 }
 
             }catch (e: Exception){
-                Log.e("CreateConnection", "Error creating connection: ${e.message}")
-                _connectionSaveStatus.value = Result.failure(e)
+                _requestResultState.value = PossibleRequestState.Failure(CREATE_ERROR + CONNECTION)
+                e.printStackTrace()
             }
         }
 
-
     }
 
-    fun generatePairingRequest(){
-        isLoading.value = true
-        val jsonString = _scannedResult.value ?: return
-
+    /*
+     * Recreates a pairing request from a scanned QR code string
+     */
+    fun recreatePairingRequestFromQRCodeString(qRCodeJsonString: String){
+        _requestResultState.value = PossibleRequestState.ComponentLoading
         try {
-            val connectionRequest = DeviceManager.makeConnectionRequest(jsonString)
-            connectionRequestState.value = Pair(true, connectionRequest)
+            val connectionRequest = gson.fromJson(qRCodeJsonString, ConnectionRequest::class.java)
+            // Note - If this were to be a backend server, we would check the expiry of the connectionRequest here
+            // and allow this process to fail with a message if connectionRequest expire
+            _requestResultState.value = PossibleRequestState.SuccessWithData(connectionRequest)
+
         }catch (e: Exception){
-            connectionRequestState.value = Pair(false, null)
-        }finally {
-            isLoading.value = false
+            _requestResultState.value = PossibleRequestState.Failure(QRCODE_ERROR)
+            e.printStackTrace()
         }
 
     }
 
-
-    fun requestCameraPermission(context: Context, launcher: ManagedActivityResultLauncher<String, Boolean>) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            launcher.launch(Manifest.permission.CAMERA)
-        } else {
-            _cameraPermissionGranted.value = true
-        }
+    /*
+     * Resets the request result state to idle
+     */
+    fun resetRequestResultState(){
+        _requestResultState.value = PossibleRequestState.Idle
     }
 
-    fun updatePermissionStatus(isGranted: Boolean) {
-        _cameraPermissionGranted.value = isGranted
+    fun resetMapInteractiveState(){
+        _mapInteractiveState.value = MapInteractivityState.Idle
     }
 
-    fun updateScannedResult(result: String) {
-        _scannedResult.value = result
-    }
+    fun updateMapInteractivityState(
+        interactivityState: MapInteractivityState
+    ){ _mapInteractiveState.value = interactivityState }
 
-    fun clearScannedResult() {
-        _scannedResult.value = null
-    }
 
 }

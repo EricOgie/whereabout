@@ -1,5 +1,17 @@
 package com.tees.s3186984.whereabout.wutils
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.util.Log
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import android.Manifest
+import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
+import com.tees.s3186984.whereabout.model.LocationAddress
+
 class Helpers(){
 
     companion object {
@@ -61,7 +73,83 @@ class Helpers(){
         }
 
 
+        fun resolveAddress(latLng: LatLng, context: Context, onResolve: (LocationAddress?) -> Unit){
+            try {
+                val geocoder = Geocoder(context)
+                val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0].getAddressLine(0)
+                    // get Nearby landmarks
+                    nearByLandMarks(context){ landmarks ->
+
+                        if (landmarks.isNullOrEmpty()){
+                            val locationAdd = LocationAddress(address = address, landmarks = emptyList<Place>())
+                            onResolve(locationAdd)
+                            return@nearByLandMarks
+                        }
+
+                        val firstTwoLandMarks = landmarks.take(2)
+                        val result = LocationAddress(address = address, landmarks = firstTwoLandMarks)
+                        onResolve(result)
+                    }
+
+                } else {
+                    onResolve(null)
+                }
+            } catch (e: Exception) {
+                Log.d("Resolve-Address", "${FETCHING_ERROR} Error: ${e.message}")
+                onResolve(null)
+            }
+        }
+
+
+        fun nearByLandMarks(context: Context, onResult: (List<Place>?) -> Unit) {
+            val appInfo = context.packageManager
+                .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+
+            val googleMapKey = appInfo.metaData.getString(GOOGLE_API_KEY)
+
+            if (!Places.isInitialized()) {
+                Places.initialize(context, googleMapKey!!)
+            }
+
+            try {
+                val placeClient = Places.createClient(context)
+
+                val requestPLaceFields = listOf(
+                    Place.Field.NAME,
+                    Place.Field.ADDRESS
+                )
+
+                val request = FindCurrentPlaceRequest.newInstance(requestPLaceFields)
+
+                if ( ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                {
+                    placeClient.findCurrentPlace(request)
+                        .addOnSuccessListener { response ->
+                            val places = response.placeLikelihoods.map { it.place }
+                            onResult(places)
+                        }
+                        .addOnFailureListener { exception ->
+                            onResult(null)
+                            Log.d("FetchLandmarks", "$FETCHING_ERROR landmarks: ${exception.message}")
+                        }
+                } else {
+                    onResult(null)
+                    Log.d("FetchLandmarks", LOCATION_PERMISSION_ERROR)
+                }
+
+            }catch (e: Exception){
+                onResult(null)
+                Log.d("LANDMARK", "resolveAddress EXCEPTYION: ${e.message}")
+            }
+        }
+
     }
+
+
 }
 
 

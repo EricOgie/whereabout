@@ -1,8 +1,11 @@
 package com.tees.s3186984.whereabout
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.ui.graphics.Color
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tees.s3186984.whereabout.navigation.App
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 
@@ -25,6 +28,12 @@ import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // We are applying immersive mode here
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
         setContent {
             WhereaboutTheme{
                 App(this)

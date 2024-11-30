@@ -1,6 +1,8 @@
 package com.tees.s3186984.whereabout.navigation
 
+import android.app.Activity
 import android.content.Context
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -23,15 +25,16 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tees.s3186984.whereabout.ui.theme.WBackgroundGray
 import com.tees.s3186984.whereabout.view.auth.LogInScreen
+import com.tees.s3186984.whereabout.view.launch.ErrorScreen
 import com.tees.s3186984.whereabout.view.launch.OnBoardingScreen
 import com.tees.s3186984.whereabout.view.launch.SplashScreen
 import com.tees.s3186984.whereabout.view.main.PairedConnectionScreen
-import com.tees.s3186984.whereabout.view.main.HistoryScreen
 import com.tees.s3186984.whereabout.view.main.HomeScreen
 import com.tees.s3186984.whereabout.view.main.ProfileScreen
 import com.tees.s3186984.whereabout.viewmodel.HomeViewModel
 import com.tees.s3186984.whereabout.viewmodel.LaunchViewModel
 import com.tees.s3186984.whereabout.viewmodel.LogInViewModel
+import com.tees.s3186984.whereabout.viewmodel.OnboardingViewModel
 import com.tees.s3186984.whereabout.viewmodel.PairedConnectionViewModel
 import com.tees.s3186984.whereabout.viewmodel.ProfileViewModel
 import com.tees.s3186984.whereabout.viewmodel.SignUpViewModel
@@ -58,11 +61,9 @@ fun App(context: Context){
     val navController = rememberNavController()
     val systemUiController = rememberSystemUiController()
     var currentRoute by remember { mutableStateOf(Screens.Splash.name) }
-    var statusColor by remember { mutableStateOf(Color.White) }
-    val selectedItemIndexState = rememberSaveable { mutableStateOf(0) }
+    val bottomBarSelectedItemIndexState = rememberSaveable { mutableStateOf(0) }
     val signUpVM: SignUpViewModel = viewModel(factory = ViewModelWithContextFactory(context))
-
-    systemUiController.setStatusBarColor(color = statusColor, darkIcons = true)
+    systemUiController.setStatusBarColor(color = Color.Transparent, darkIcons = true)
 
 
     /**
@@ -87,10 +88,9 @@ fun App(context: Context){
     Scaffold(
         bottomBar = {
             if (currentRoute in Screens.screenWithBottomNavBar()){
-                statusColor = WBackgroundGray
                 systemUiController.setNavigationBarColor(color = Color.Black)
                 Box(modifier = Modifier.background(Color.Black).padding(vertical = 0.dp)){
-                    BottomNavigationBar(navController, selectedItemIndexState)
+                    BottomNavigationBar(navController, bottomBarSelectedItemIndexState)
                 }
             }
         }
@@ -99,7 +99,7 @@ fun App(context: Context){
         NavHost(
             modifier = Modifier.padding(paddingValues),
             navController = navController,
-            startDestination = Screens.Home.name
+            startDestination = Screens.Splash.name
         )
         {
             composable(Screens.Splash.name) {
@@ -107,7 +107,13 @@ fun App(context: Context){
                 SplashScreen(navController = navController, launchVM=launchVM)
             }
 
-            composable(Screens.Onboarding.name) { OnBoardingScreen(navController = navController) }
+            composable(Screens.Error.name){ ErrorScreen() }
+
+            composable(Screens.Onboarding.name) {
+                val onboardingViewModel: OnboardingViewModel = viewModel(
+                    factory = ViewModelWithContextFactory(context = context))
+                OnBoardingScreen(navController = navController, onboardingViewModel = onboardingViewModel)
+            }
 
             composable(Screens.LogIn.name) {
                 val logInVM: LogInViewModel = viewModel(factory = ViewModelWithContextFactory(context))
@@ -116,15 +122,16 @@ fun App(context: Context){
 
             composable(Screens.Home.name){
                 val homeViewModel:HomeViewModel = viewModel(factory = ViewModelWithContextFactory(context))
+                bottomBarSelectedItemIndexState.value = 0
                 HomeScreen(
                     navController = navController,
                     homeViewModel = homeViewModel,
-                    navBarIndexState = selectedItemIndexState
                 )
             }
 
             composable(Screens.Profile.name){
                 val profileVM: ProfileViewModel = viewModel(factory = ViewModelWithContextFactory(context))
+                bottomBarSelectedItemIndexState.value = 2
                 ProfileScreen(profileViewModel = profileVM)
             }
 
@@ -132,7 +139,7 @@ fun App(context: Context){
                 val connectionViewModel: PairedConnectionViewModel = viewModel(
                     factory = ViewModelWithContextFactory(context)
                 )
-
+                bottomBarSelectedItemIndexState.value = 1
                 PairedConnectionScreen(connectionVM = connectionViewModel)
             }
 

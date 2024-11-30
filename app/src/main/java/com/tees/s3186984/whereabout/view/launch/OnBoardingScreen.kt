@@ -23,6 +23,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import androidx.compose.ui.Modifier
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -41,6 +42,7 @@ import com.tees.s3186984.whereabout.componets.WSignInOrSignUpAddOn
 import com.tees.s3186984.whereabout.componets.WSubmitButton
 import com.tees.s3186984.whereabout.navigation.Screens
 import com.tees.s3186984.whereabout.ui.theme.WhereaboutTheme
+import com.tees.s3186984.whereabout.viewmodel.OnboardingViewModel
 import com.tees.s3186984.whereabout.wutils.ALREADY_HAVE
 
 
@@ -50,7 +52,7 @@ import com.tees.s3186984.whereabout.wutils.REGISTER
 import com.tees.s3186984.whereabout.wutils.WELCOME
 
 @Composable
-fun OnBoardingScreen(navController: NavController) {
+fun OnBoardingScreen(navController: NavController, onboardingViewModel: OnboardingViewModel) {
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.splashlogo))
 
@@ -117,9 +119,6 @@ fun OnBoardingScreen(navController: NavController) {
 
         }
 
-
-
-
     }
 
 }
@@ -130,6 +129,9 @@ fun OnBoardingScreen(navController: NavController) {
 @Composable
 fun HomePreview() {
     WhereaboutTheme {
-        OnBoardingScreen(navController= rememberNavController())
+        OnBoardingScreen(
+            navController= rememberNavController(),
+            OnboardingViewModel(LocalContext.current)
+        )
     }
 }

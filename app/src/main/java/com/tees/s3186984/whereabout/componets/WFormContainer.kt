@@ -9,6 +9,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,14 +57,16 @@ fun WFormContainer(modifier: Modifier = Modifier, content:  @Composable (ColumnS
 fun WSelectableCircularImage(
     id: String?,
     title: String,
-    isSelected: Boolean = false,
     handleClick: (String) -> Unit
 ) {
+
+    var isSelected by remember { mutableStateOf(false) }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(8.dp)
             .clickable{
+                isSelected = !isSelected
                 handleClick(id?: "")
             }
     ) {

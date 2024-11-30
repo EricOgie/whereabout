@@ -3,6 +3,7 @@ package com.tees.s3186984.whereabout.wutils
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.tees.s3186984.whereabout.model.LocationAddress
 
 /**
  * PossibleRequestState represents the various states of a network like request within whereabout app.
@@ -31,6 +32,13 @@ sealed class PossibleRequestState<out T> {
     object Success: PossibleRequestState<Nothing>()                                  // Request was successful but without data
     data class SuccessWithData<T>(val data: T) : PossibleRequestState<T>()          // Request was successful with data
     data class Failure(val message: String) : PossibleRequestState<Nothing>()      // Request failed with a possible message
+}
+
+sealed class MapInteractivityState{
+    object Idle: MapInteractivityState()
+    object Resolving: MapInteractivityState()
+    data class Error(val message: String): MapInteractivityState()
+    data class MapData(val data: LocationAddress): MapInteractivityState()
 }
 
 

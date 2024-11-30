@@ -1,5 +1,8 @@
 package com.tees.s3186984.whereabout.componets
 
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.clickable
@@ -21,9 +24,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.tees.s3186984.whereabout.R
 import com.tees.s3186984.whereabout.model.Connection
@@ -100,7 +106,7 @@ fun WSignInOrSignUpAddOn(
 
 
 @Composable
-fun WPairedConnection(
+fun PairedConnectionItem(
   modifier: Modifier = Modifier,
   pairedConnection : Connection,
   handleDeleteClick: (Connection) -> Unit,
@@ -220,6 +226,54 @@ fun WPairedConnection(
 }
 
 
+/**
+ * A reusable composable for handling runtime permission requests in Jetpack Compose.
+ *
+ * This composable checks if the specified permission is already granted and invokes the provided
+ * callback with the result. If the permission is not granted, it requests the permission from
+ * the user and passes the result to the callback once the user responds.
+ *
+ * **Use Case:**
+ * - To simplify runtime permission handling in a Compose UI.
+ * - Can be used anywhere a single permission needs to be requested and its result processed.
+ *
+ * **Example Usage:**
+ * ```
+ * RequestPermissionHandler(
+ *     permissionName = Manifest.permission.CAMERA,
+ *     handlePermissionRequestResponse = { requestResponse ->
+ *         // Do what you want with the permission request response, requestResponse.
+ *     }
+ * )
+ * ```
+ *
+ * @param permissionName The name of the permission to be requested (e.g., Manifest.permission.CAMERA).
+ * @param handlePermissionRequestResponse A callback invoked with the permission result.
+ */
+@Composable
+fun RequestPermissionHandler(
+    permissionName: String,
+    handlePermissionRequestResponse: (Boolean) -> Unit
+)
+{
+    val context = LocalContext.current
+    // Launcher for handling permission request result
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ){ isPermissionGranted -> handlePermissionRequestResponse(isPermissionGranted) }
+
+    // Upon composition, we want the permission check to fire once with no chance of
+    // recomposition. Hence, the reason for passing the static key, Unit, to the launchEffect() here
+    LaunchedEffect(Unit) {
+        // Check if the passed permissionName has been granted and pass true to the callback
+        if (ContextCompat.checkSelfPermission(context, permissionName) == PackageManager.PERMISSION_GRANTED){
+            handlePermissionRequestResponse(true)
+        }else {
+            // Launch permission request since permission has not been granted
+            permissionLauncher.launch(input = permissionName)
+        }
+    }
+}
 
 
 
@@ -227,7 +281,7 @@ fun WPairedConnection(
 @Composable
 fun ScreenAddOnPreview() {
     WhereaboutTheme {
-        WPairedConnection(
+        PairedConnectionItem(
             pairedConnection = Connection(),
             handleEditClick = {},
             handleDeleteClick = {}

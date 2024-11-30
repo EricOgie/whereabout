@@ -1,7 +1,6 @@
 package com.tees.s3186984.whereabout.repository
 
 
-import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
